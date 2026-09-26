@@ -1,0 +1,171 @@
+# The web app's own pipeline (1.15). It runs only when the web app's dependency graph changed,
+# and its deploy jobs never wait on — or block — the mobile pipeline.
+name: Web
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: web-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+  TURBO_TELEMETRY_DISABLED: 1
+  # 1.18 — web-only configuration and secrets (GitHub environments "web-staging" / "web-production").
+  VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ vars.WEB_VERCEL_PROJECT_ID }}
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      web: ${{ steps.affected.outputs.web }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - id: affected
+        # 12.1 — turbo-ignore walks web's dependency graph: a change in apps/mobile skips this
+        # pipeline; a change in packages/ui (a dependency of web) runs it.
+        run: |
+          BASE=${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || 'HEAD^' }}
+          if npx -y turbo-ignore web --fallback="$BASE"; then echo "web=false" >> "$GITHUB_OUTPUT"; else echo "web=true" >> "$GITHUB_OUTPUT"; fi
+
+  build:
+    needs: changes
+    if: needs.changes.outputs.web == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+        with:
+          filter: 'web...'
+      - name: Static export (7.4 / 1.16)
+        run: pnpm turbo run build --filter=web
+        env:
+          EXPO_PUBLIC_APP_ENV: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+          EXPO_PUBLIC_API_URL: ${{ vars.WEB_API_URL || 'http://localhost:4000' }}
+          EXPO_PUBLIC_SENTRY_DSN: ${{ vars.WEB_SENTRY_DSN }}
+          EXPO_PUBLIC_SITE_URL: ${{ vars.WEB_SITE_URL || 'http://localhost:8081' }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: web-dist
+          path: apps/web/dist
+
+  # 13.16 / 13.25 — required on every PR: Chromium, WebKit, Firefox + a mobile viewport.
+  e2e:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [chromium, webkit, firefox, mobile]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+        with:
+          filter: 'web...'
+      - uses: actions/download-artifact@v4
+        with:
+          name: web-dist
+          path: apps/web/dist
+      - run: pnpm --filter web exec playwright install --with-deps ${{ matrix.project == 'mobile' && 'chromium' || matrix.project }}
+      - run: pnpm --filter web exec playwright test --project=${{ matrix.project }}
+        env:
+          CI: true
+      # 13.24 — a test that only passed on retry is flaky: open (or bump) a tracking issue.
+      - name: Report flaky tests
+        if: always() && github.ref == 'refs/heads/main'
+        run: node tooling/scripts/report-flaky.mjs apps/web/test-results/results.json
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report-${{ matrix.project }}
+          path: apps/web/playwright-report
+
+  # 13.21 — Lighthouse CI budgets.
+  lighthouse:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+        with:
+          filter: 'web...'
+      - uses: actions/download-artifact@v4
+        with:
+          name: web-dist
+          path: apps/web/dist
+      # The export calls the API on load; the seeded mock API keeps the console clean (errors-in-console).
+      - name: Start the mock API
+        run: |
+          pnpm mock-api > mock-api.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf http://127.0.0.1:4000/health && exit 0; sleep 1; done
+          cat mock-api.log
+          exit 1
+      - run: pnpm --filter web lighthouse
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+
+  # 12.4 — a preview deployment per PR.
+  preview:
+    needs: build
+    if: github.event_name == 'pull_request' && vars.WEB_VERCEL_PROJECT_ID != ''
+    runs-on: ubuntu-latest
+    environment: web-preview
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: web-dist
+          path: apps/web/dist
+      - id: deploy
+        working-directory: apps/web
+        run: |
+          URL=$(npx -y vercel@latest deploy --prebuilt=false dist --token=${{ secrets.VERCEL_TOKEN }} --yes)
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({ ...context.repo, issue_number: context.issue.number,
+              body: `🌐 Web preview: ${{ steps.deploy.outputs.url }}` })
+
+  # 1.15 — production deploy is its own job behind the "web-production" environment, so it can
+  # be held back (required reviewers) without affecting mobile.
+  deploy:
+    needs: [e2e, lighthouse]
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && vars.WEB_VERCEL_PROJECT_ID != ''
+    runs-on: ubuntu-latest
+    environment: web-production
+    env:
+      SENTRY_AUTH_TOKEN: ${{ secrets.WEB_SENTRY_AUTH_TOKEN }}
+      SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+      SENTRY_PROJECT: ${{ vars.WEB_SENTRY_PROJECT }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          name: web-dist
+          path: apps/web/dist
+      - name: Upload source maps to the web Sentry project (6.3)
+        if: env.SENTRY_AUTH_TOKEN != ''
+        run: |
+          VERSION=$(node -p "require('./apps/web/package.json').version")
+          npx -y @sentry/cli sourcemaps inject apps/web/dist
+          npx -y @sentry/cli sourcemaps upload --release "web@$VERSION" apps/web/dist
+      - name: Deploy (Vercel; swap for CloudFront / EAS Hosting as needed — 1.16)
+        working-directory: apps/web
+        run: npx -y vercel@latest deploy --prod dist --token=${{ secrets.VERCEL_TOKEN }} --yes
+      # Rollback (1.17): `vercel rollback` or re-run this job on an earlier commit.

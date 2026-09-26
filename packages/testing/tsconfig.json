@@ -1,0 +1,15 @@
+{
+  "extends": "@repo/tsconfig/react-library.json",
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "composite": false,
+    "noEmit": true,
+    "emitDeclarationOnly": false,
+    "declaration": false,
+    "declarationMap": false,
+    "declarationDir": null,
+    "tsBuildInfoFile": null
+  },
+  "include": ["fixtures", "factories", "mocks", "render", "fixtures/*.json"],
+  "exclude": []
+}

@@ -1,0 +1,166 @@
+# Shared quality gates for every PR (13.25) and the full suite on main (13.22).
+# Per-app build / E2E / deploy pipelines live in <app>.yml and are independent (1.15).
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  merge_group:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # 12.2 — Turborepo remote cache (Vercel or self-hosted). Unset → local cache only.
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+  TURBO_TELEMETRY_DISABLED: 1
+  # 12.1 / 13.22 — PRs run only what the change affects; main runs everything.
+  TURBO_SCM_BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || '' }}
+
+jobs:
+  # 1.10 — the app matrix is derived from apps/*, never hardcoded.
+  discover:
+    runs-on: ubuntu-latest
+    outputs:
+      apps: ${{ steps.apps.outputs.apps }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: apps
+        run: echo "apps=$(node tooling/scripts/list-apps.mjs)" >> "$GITHUB_OUTPUT"
+
+  checks:
+    name: Typecheck · lint · unit · component · contract
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup
+      - name: One version of every dependency (1.3)
+        run: pnpm deps:check
+      - name: Formatting
+        run: pnpm format:check
+      - name: Translation keys (10.2)
+        run: pnpm i18n:check
+      - name: Project references in sync with the workspace graph (13.27)
+        run: node tooling/scripts/sync-ts-references.mjs --check
+      - name: TypeScript build graph (tsc -b)
+        run: pnpm exec tsc -b
+      - name: Typecheck + lint (incl. dependency-boundary rules)
+        run: pnpm turbo run typecheck lint ${{ github.event_name == 'pull_request' && '--affected' || '' }} --continue
+      - name: Unit, component, integration and contract tests
+        run: pnpm turbo run test ${{ github.event_name == 'pull_request' && '--affected' || '' }} --continue -- --coverage --ci
+        env:
+          CI: true
+          # 13.13 — contract tests hit this backend; unset → the seeded mock API.
+          CONTRACT_API_URL: ${{ vars.CONTRACT_API_URL }}
+      - name: Coverage must not drop on changed files (13.23)
+        if: github.event_name == 'pull_request'
+        run: node tooling/scripts/check-changed-coverage.mjs --base ${{ github.event.pull_request.base.sha }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage
+          path: '**/coverage/coverage-summary.json'
+          if-no-files-found: ignore
+
+  # 1.14 — each app installs, builds and tests with only its own dependency graph, proving
+  # neither app has a hidden dependency on the other.
+  isolation:
+    needs: discover
+    name: Isolated ${{ matrix.app }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app: ${{ fromJSON(needs.discover.outputs.apps) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+        with:
+          filter: '${{ matrix.app }}...'
+      - run: pnpm turbo run typecheck test --filter="${{ matrix.app }}..."
+        env:
+          CI: true
+
+  # 13.19 / 13.20 — visual regression + a11y on the shared ui Storybook.
+  visual:
+    runs-on: ubuntu-latest
+    env:
+      CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Skip on PRs that don't touch packages/ui
+        id: changed
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ] && git diff --quiet ${{ github.event.pull_request.base.sha }} HEAD -- packages/ui; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.changed.outputs.skip != 'true'
+        uses: ./.github/actions/setup
+        with:
+          filter: '@repo/ui...'
+      - if: steps.changed.outputs.skip != 'true'
+        run: pnpm --filter @repo/ui build-storybook
+      - name: axe on every story, light + dark (13.20)
+        if: steps.changed.outputs.skip != 'true'
+        run: |
+          pnpm --filter @repo/ui exec playwright install --with-deps chromium
+          pnpm --filter @repo/ui test:a11y
+      - if: steps.changed.outputs.skip != 'true' && env.CHROMATIC_PROJECT_TOKEN != ''
+        uses: chromaui/action@v11
+        with:
+          projectToken: ${{ env.CHROMATIC_PROJECT_TOKEN }}
+          storybookBuildDir: packages/ui/storybook-static
+          exitZeroOnChanges: true # visual changes are reviewed in the PR's Chromatic check
+
+  # 13.21 — Reassure: component render regressions against the base branch.
+  perf:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup
+      - name: Baseline on base branch
+        id: baseline
+        run: |
+          BASE=${{ github.event.pull_request.base.sha }}
+          # No baseline when the base predates packages/ui (e.g. the repository's first PR).
+          if ! git cat-file -e "$BASE:packages/ui/package.json" 2>/dev/null; then
+            echo "No packages/ui on the base branch; skipping the comparison."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git checkout "$BASE"
+          pnpm install --frozen-lockfile
+          pnpm --filter @repo/ui exec reassure --baseline
+          git checkout ${{ github.sha }}
+          pnpm install --frozen-lockfile
+      - if: steps.baseline.outputs.skip != 'true'
+        run: pnpm --filter @repo/ui exec reassure --branch
+      - uses: actions/upload-artifact@v4
+        if: steps.baseline.outputs.skip != 'true'
+        with:
+          name: reassure
+          path: packages/ui/.reassure/output.md
+
+  # 15.2 — dependency vulnerability scanning on every PR.
+  # Needs Settings → Code security → "Dependency graph" enabled; set the repo variable
+  # DEPENDENCY_REVIEW=true once it is.
+  dependency-review:
+    if: github.event_name == 'pull_request' && vars.DEPENDENCY_REVIEW == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high

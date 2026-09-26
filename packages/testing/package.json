@@ -1,0 +1,61 @@
+{
+  "name": "@repo/testing",
+  "version": "0.0.0",
+  "private": true,
+  "sideEffects": false,
+  "exports": {
+    "./fixtures": "./fixtures/index.ts",
+    "./fixtures/*.json": "./fixtures/*.json",
+    "./factories": "./factories/index.ts",
+    "./backend": "./mocks/backend.ts",
+    "./msw": "./mocks/handlers.ts",
+    "./msw-node": "./mocks/node.ts",
+    "./render": "./render/index.tsx",
+    "./render-web": "./render/web.tsx"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc -p tsconfig.check.json",
+    "test": "jest --passWithNoTests"
+  },
+  "dependencies": {
+    "@repo/domain": "workspace:*",
+    "@testing-library/react": "catalog:",
+    "@testing-library/react-native": "catalog:",
+    "msw": "catalog:"
+  },
+  "devDependencies": {
+    "@repo/analytics": "workspace:*",
+    "@repo/api-client": "workspace:*",
+    "@repo/auth": "workspace:*",
+    "@repo/config": "workspace:*",
+    "@repo/data": "workspace:*",
+    "@repo/eslint-config": "workspace:*",
+    "@repo/i18n": "workspace:*",
+    "@repo/jest-config": "workspace:*",
+    "@repo/state": "workspace:*",
+    "@repo/tsconfig": "workspace:*",
+    "@repo/ui": "workspace:*",
+    "@tanstack/react-query": "catalog:",
+    "@types/jest": "catalog:",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "eslint": "catalog:",
+    "jest": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "react-native": "catalog:",
+    "react-test-renderer": "catalog:",
+    "typescript": "catalog:"
+  },
+  "peerDependencies": {
+    "react": "*",
+    "react-native": "*",
+    "react-dom": "*"
+  },
+  "peerDependenciesMeta": {
+    "react-dom": {
+      "optional": true
+    }
+  }
+}

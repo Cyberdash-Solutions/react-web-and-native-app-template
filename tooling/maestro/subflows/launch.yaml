@@ -1,0 +1,10 @@
+# Fresh launch against the seeded backend (13.18): reset data, clear app state, open the app.
+appId: ${APP_ID}
+---
+- evalScript: "${http.post(API_URL + '/__reset', { body: '' })}"
+- launchApp:
+    clearState: true
+    clearKeychain: true
+- extendedWaitUntil:
+    visible: 'Hello, world!'
+    timeout: 20000

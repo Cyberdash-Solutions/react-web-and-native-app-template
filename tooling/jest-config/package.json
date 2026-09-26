@@ -1,0 +1,18 @@
+{
+  "name": "@repo/jest-config",
+  "version": "0.0.0",
+  "private": true,
+  "main": "index.js",
+  "dependencies": {
+    "@react-native/jest-preset": "0.86.3",
+    "babel-preset-expo": "catalog:",
+    "jest-environment-jsdom": "^29.7.0",
+    "jest-expo": "catalog:"
+  },
+  "peerDependencies": {
+    "jest": "^29.7.0"
+  },
+  "devDependencies": {
+    "jest": "catalog:"
+  }
+}

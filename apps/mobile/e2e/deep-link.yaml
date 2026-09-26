@@ -1,0 +1,17 @@
+appId: com.example.helloworld.test
+name: Deep links resolve through the shared route map (11.3)
+tags: [critical]
+env:
+  APP_ID: com.example.helloworld.test
+  API_URL: http://localhost:4000
+  EMAIL: ada@example.com
+  PASSWORD: correct-horse-battery
+  USER_NAME: Ada Lovelace
+---
+- runFlow: ../../../tooling/maestro/subflows/launch.yaml
+- runFlow: ../../../tooling/maestro/subflows/consent.yaml
+- runFlow: ../../../tooling/maestro/subflows/login.yaml
+- openLink: helloworld://messages/m_3
+- assertVisible: 'Message #3'
+- openLink: helloworld://does-not-exist
+- assertVisible: "This screen doesn't exist."

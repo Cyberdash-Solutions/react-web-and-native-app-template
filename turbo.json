@@ -1,0 +1,41 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "ui": "stream",
+  "globalDependencies": [
+    "tooling/tsconfig/*.json",
+    "tooling/jest-config/*.js",
+    "tooling/eslint-config/*.mjs",
+    "pnpm-workspace.yaml"
+  ],
+  "globalEnv": ["CI", "NODE_ENV"],
+  "tasks": {
+    "build": {
+      "env": ["EXPO_PUBLIC_*", "SENTRY_*"],
+      "outputs": ["dist/**", "storybook-static/**"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "lint": {
+      "outputs": []
+    },
+    "typecheck": {
+      "outputs": []
+    },
+    "test": {
+      "env": ["CONTRACT_API_URL"],
+      "outputs": ["coverage/**"]
+    },
+    "test:perf": {
+      "outputs": [".reassure/**"]
+    },
+    "e2e": {
+      "dependsOn": ["build"],
+      "cache": false
+    },
+    "build-storybook": {
+      "outputs": ["storybook-static/**"]
+    }
+  }
+}

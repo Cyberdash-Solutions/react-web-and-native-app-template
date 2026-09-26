@@ -1,0 +1,19 @@
+{
+  "extends": "@repo/tsconfig/react-library.json",
+  "include": ["src"],
+  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx"],
+  "references": [
+    {
+      "path": "../api-client"
+    },
+    {
+      "path": "../data"
+    },
+    {
+      "path": "../domain"
+    },
+    {
+      "path": "../utils"
+    }
+  ]
+}

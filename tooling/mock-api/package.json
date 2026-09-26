@@ -1,0 +1,19 @@
+{
+  "name": "@repo/mock-api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Seeded fake backend for local development, contract tests and E2E (13.18).",
+  "exports": {
+    ".": "./server.mjs"
+  },
+  "bin": {
+    "mock-api": "./server.mjs"
+  },
+  "scripts": {
+    "start": "node server.mjs"
+  },
+  "dependencies": {
+    "@repo/testing": "workspace:*"
+  }
+}

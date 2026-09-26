@@ -1,0 +1,28 @@
+appId: com.example.helloworld.test
+name: Sign in, edit profile, sign out (13.17)
+tags: [critical]
+env:
+  APP_ID: com.example.helloworld.test
+  API_URL: http://localhost:4000
+  EMAIL: ada@example.com
+  PASSWORD: correct-horse-battery
+  USER_NAME: Ada Lovelace
+---
+- runFlow: ../../../tooling/maestro/subflows/launch.yaml
+- runFlow: ../../../tooling/maestro/subflows/consent.yaml
+- runFlow: ../../../tooling/maestro/subflows/login.yaml
+- assertVisible: '10 messages'
+# Core update flow
+- tapOn: 'Profile'
+- tapOn: 'Name'
+- eraseText
+- inputText: 'Grace Hopper'
+- tapOn: 'Save'
+- back
+- assertVisible: 'Hello, Grace Hopper!'
+# Sign out
+- tapOn: 'Settings'
+- scrollUntilVisible:
+    element: 'Sign out'
+- tapOn: 'Sign out'
+- assertVisible: 'Hello, world!'

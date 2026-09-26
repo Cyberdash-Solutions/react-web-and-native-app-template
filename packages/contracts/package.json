@@ -1,0 +1,26 @@
+{
+  "name": "@repo/contracts",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc -p tsconfig.check.json",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@repo/domain": "workspace:*",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@repo/eslint-config": "workspace:*",
+    "@repo/jest-config": "workspace:*",
+    "@repo/mock-api": "workspace:*",
+    "@repo/testing": "workspace:*",
+    "@repo/tsconfig": "workspace:*",
+    "@types/jest": "catalog:",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "jest": "catalog:",
+    "typescript": "catalog:"
+  }
+}

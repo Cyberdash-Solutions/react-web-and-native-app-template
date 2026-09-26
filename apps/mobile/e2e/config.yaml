@@ -1,0 +1,8 @@
+# Maestro workspace config (13.15). Run: `pnpm --filter mobile e2e` against an EAS `e2e` build,
+# locally or on Maestro Cloud (`maestro cloud --app-file <build> apps/mobile/e2e`).
+flows:
+  - '*.yaml'
+excludeTags:
+  - wip
+executionOrder:
+  continueOnFailure: false

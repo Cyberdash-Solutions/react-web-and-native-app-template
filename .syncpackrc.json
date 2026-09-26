@@ -1,0 +1,25 @@
+{
+  "$schema": "./node_modules/syncpack/schema.json",
+  "versionGroups": [
+    {
+      "label": "Peer dependencies are compatibility ranges, not installs",
+      "dependencyTypes": ["peer"],
+      "isIgnored": true
+    },
+    {
+      "label": "pnpm overrides pin the same versions as the catalog (see pnpm-workspace.yaml)",
+      "dependencyTypes": ["pnpmOverrides", "overrides"],
+      "isIgnored": true
+    },
+    {
+      "label": "Workspace root and internal packages are not versioned",
+      "dependencyTypes": ["local"],
+      "isIgnored": true
+    },
+    {
+      "label": "Internal packages always use the workspace protocol",
+      "dependencies": ["@repo/**"],
+      "pinVersion": "workspace:*"
+    }
+  ]
+}

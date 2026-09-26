@@ -1,0 +1,8 @@
+# Answers the analytics consent card (14.1). Pass ANSWER=Accept or ANSWER=Decline.
+appId: ${APP_ID}
+---
+- runFlow:
+    when:
+      visible: 'We value your privacy'
+    commands:
+      - tapOn: ${ANSWER || 'Decline'}

@@ -1,0 +1,76 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":semanticCommits",
+    "group:monorepos",
+    ":maintainLockFilesWeekly"
+  ],
+  "description": "15.2 — grouped dependency updates plus vulnerability alerts. The Expo SDK, React and React Native move together (15.1), so they are one group that never auto-merges.",
+  "schedule": ["before 6am on monday"],
+  "rangeStrategy": "pin",
+  "postUpdateOptions": ["pnpmDedupe"],
+  "vulnerabilityAlerts": { "enabled": true, "labels": ["security"] },
+  "osvVulnerabilityAlerts": true,
+  "packageRules": [
+    {
+      "groupName": "Expo SDK + React Native (coordinated upgrade, 15.1)",
+      "matchPackageNames": [
+        "expo",
+        "expo-*",
+        "@expo/*",
+        "react-native",
+        "react-native-*",
+        "@react-native/*",
+        "@react-native-community/*",
+        "react",
+        "react-dom",
+        "react-test-renderer",
+        "@types/react",
+        "jest-expo",
+        "babel-preset-expo",
+        "@shopify/flash-list",
+        "@sentry/react-native"
+      ],
+      "automerge": false,
+      "labels": ["expo-sdk-upgrade"],
+      "description": "Run `npx expo install --fix` in apps/mobile and follow the SDK upgrade guide."
+    },
+    { "groupName": "TanStack", "matchPackageNames": ["@tanstack/*"] },
+    { "groupName": "i18n", "matchPackageNames": ["i18next", "react-i18next"] },
+    {
+      "groupName": "Testing",
+      "matchPackageNames": [
+        "jest",
+        "@types/jest",
+        "@testing-library/*",
+        "msw",
+        "@playwright/test",
+        "@axe-core/*",
+        "reassure"
+      ]
+    },
+    { "groupName": "Storybook", "matchPackageNames": ["storybook", "@storybook/*", "vite"] },
+    {
+      "groupName": "Lint & format",
+      "matchPackageNames": [
+        "eslint",
+        "@eslint/*",
+        "typescript-eslint",
+        "eslint-plugin-*",
+        "globals",
+        "prettier"
+      ]
+    },
+    {
+      "groupName": "Monorepo tooling",
+      "matchPackageNames": ["turbo", "syncpack", "typescript", "@types/node"]
+    },
+    {
+      "matchUpdateTypes": ["patch", "minor"],
+      "matchDepTypes": ["devDependencies"],
+      "excludePackageNames": ["typescript"],
+      "automerge": true
+    }
+  ]
+}

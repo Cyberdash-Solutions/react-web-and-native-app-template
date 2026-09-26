@@ -1,0 +1,7 @@
+{
+  "name": "@repo/generators",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Target selection (1.8–1.11) and package scaffolding. Run via `pnpm create-app` / `pnpm gen`."
+}

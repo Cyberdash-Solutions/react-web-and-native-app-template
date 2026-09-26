@@ -1,0 +1,41 @@
+{
+  "files": [],
+  "references": [
+    {
+      "path": "packages/analytics"
+    },
+    {
+      "path": "packages/api-client"
+    },
+    {
+      "path": "packages/auth"
+    },
+    {
+      "path": "packages/config"
+    },
+    {
+      "path": "packages/data"
+    },
+    {
+      "path": "packages/domain"
+    },
+    {
+      "path": "packages/i18n"
+    },
+    {
+      "path": "packages/native-push"
+    },
+    {
+      "path": "packages/state"
+    },
+    {
+      "path": "packages/ui"
+    },
+    {
+      "path": "packages/utils"
+    },
+    {
+      "path": "packages/web-pwa"
+    }
+  ]
+}
