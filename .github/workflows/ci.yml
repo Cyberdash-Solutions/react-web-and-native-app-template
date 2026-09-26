@@ -131,21 +131,33 @@ jobs:
           fetch-depth: 0
       - uses: ./.github/actions/setup
       - name: Baseline on base branch
+        id: baseline
         run: |
-          git checkout ${{ github.event.pull_request.base.sha }}
+          BASE=${{ github.event.pull_request.base.sha }}
+          # No baseline when the base predates packages/ui (e.g. the repository's first PR).
+          if ! git cat-file -e "$BASE:packages/ui/package.json" 2>/dev/null; then
+            echo "No packages/ui on the base branch; skipping the comparison."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git checkout "$BASE"
           pnpm install --frozen-lockfile
-          pnpm --filter @repo/ui exec reassure --baseline || true
+          pnpm --filter @repo/ui exec reassure --baseline
           git checkout ${{ github.sha }}
           pnpm install --frozen-lockfile
-      - run: pnpm --filter @repo/ui exec reassure --branch
+      - if: steps.baseline.outputs.skip != 'true'
+        run: pnpm --filter @repo/ui exec reassure --branch
       - uses: actions/upload-artifact@v4
+        if: steps.baseline.outputs.skip != 'true'
         with:
           name: reassure
           path: packages/ui/.reassure/output.md
 
   # 15.2 — dependency vulnerability scanning on every PR.
+  # Needs Settings → Code security → "Dependency graph" enabled; set the repo variable
+  # DEPENDENCY_REVIEW=true once it is.
   dependency-review:
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' && vars.DEPENDENCY_REVIEW == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

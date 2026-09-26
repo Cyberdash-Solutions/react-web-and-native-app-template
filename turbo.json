@@ -10,7 +10,6 @@
   "globalEnv": ["CI", "NODE_ENV"],
   "tasks": {
     "build": {
-      "dependsOn": ["^build"],
       "env": ["EXPO_PUBLIC_*", "SENTRY_*"],
       "outputs": ["dist/**", "storybook-static/**"]
     },

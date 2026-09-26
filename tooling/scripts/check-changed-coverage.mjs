@@ -14,6 +14,25 @@ const { values } = parseArgs({ options: { base: { type: 'string', default: 'orig
 const root = path.resolve(import.meta.dirname, '../..');
 const DEFAULT_BAR = 70;
 
+// A base without a workspace (the repository's first PR) has no coverage to drop from.
+try {
+  execFileSync('git', ['cat-file', '-e', `${values.base}:package.json`], {
+    cwd: root,
+    stdio: 'ignore',
+  });
+} catch {
+  console.log(`Base ${values.base} has no workspace yet; nothing to compare against.`);
+  process.exit(0);
+}
+
+/** Pure re-export entry points (`export * from …`) have no logic of their own to cover. */
+const isReExportOnly = (file) =>
+  fs
+    .readFileSync(path.join(root, file), 'utf8')
+    .replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, '')
+    .replace(/export\s+(type\s+)?(\*|\{[^}]*\})\s+from\s+['"][^'"]+['"];?/g, '')
+    .trim() === '';
+
 const changed = execFileSync(
   'git',
   ['diff', '--name-only', '--diff-filter=AM', `${values.base}...HEAD`],
