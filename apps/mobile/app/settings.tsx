@@ -1,7 +1,7 @@
-import { useAnalytics, useConsent, useTrackScreen } from '@repo/analytics';
-import { biometricsSupported, useAuth, useAuthSession } from '@repo/auth';
-import { supportedLocales, useTranslation } from '@repo/i18n';
-import { usePreferences, type ColorSchemePreference } from '@repo/state';
+import { useAnalytics, useConsent, useTrackScreen } from '@repo/core/analytics';
+import { biometricsSupported, useAuth, useAuthSession } from '@repo/core/auth';
+import { supportedLocales, useTranslation } from '@repo/core/i18n';
+import { usePreferences, type ColorSchemePreference } from '@repo/core/state';
 import { Button, Card, SegmentedControl, Screen, Text, ToggleRow } from '@repo/ui';
 import { Link, useRouter } from 'expo-router';
 

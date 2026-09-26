@@ -3,20 +3,20 @@ import {
   createConsentStore,
   AnalyticsProvider,
   type AnalyticsSink,
-} from '@repo/analytics';
-import { createApiClient, createEndpoints } from '@repo/api-client';
+} from '@repo/core/analytics';
+import { createApiClient, createEndpoints } from '@repo/core/api-client';
 import {
   AuthProvider,
   AuthScopedDataProvider,
   createAuthSession,
   createMemoryTokenStorage,
   type AuthSession,
-} from '@repo/auth';
-import { createStaticFlagClient, type FeatureFlagValues } from '@repo/config';
-import { FeatureFlagProvider } from '@repo/config/react';
-import { createQueryClient } from '@repo/data';
-import { createI18n, I18nextProvider, type Locale } from '@repo/i18n';
-import { createMemoryStorage, createPreferencesStore, PreferencesProvider } from '@repo/state';
+} from '@repo/core/auth';
+import { createStaticFlagClient, type FeatureFlagValues } from '@repo/core/config';
+import { FeatureFlagProvider } from '@repo/core/config/react';
+import { createQueryClient } from '@repo/core/data';
+import { createI18n, I18nextProvider, type Locale } from '@repo/core/i18n';
+import { createMemoryStorage, createPreferencesStore, PreferencesProvider } from '@repo/core/state';
 import { ThemeProvider } from '@repo/ui';
 import type { QueryClient } from '@tanstack/react-query';
 import type { ReactElement, ReactNode } from 'react';

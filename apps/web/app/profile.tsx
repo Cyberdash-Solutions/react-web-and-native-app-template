@@ -1,8 +1,8 @@
-import { useAnalytics, useTrackScreen } from '@repo/analytics';
-import { useAuth } from '@repo/auth';
-import { useMe, useUpdateProfile } from '@repo/data';
-import { updateProfileInputSchema } from '@repo/domain';
-import { useTranslation } from '@repo/i18n';
+import { useAnalytics, useTrackScreen } from '@repo/core/analytics';
+import { useAuth } from '@repo/core/auth';
+import { useMe, useUpdateProfile } from '@repo/core/data';
+import { updateProfileInputSchema } from '@repo/core/domain';
+import { useTranslation } from '@repo/core/i18n';
 import { Button, Card, Screen, Text, TextField } from '@repo/ui';
 import { Redirect } from 'expo-router';
 import Head from 'expo-router/head';

@@ -3,14 +3,14 @@ import {
   createConsentStore,
   createConsoleSink,
   createPlatformSink,
-} from '@repo/analytics';
-import { createApiClient, createEndpoints } from '@repo/api-client';
-import { createAuthSession, createPlatformTokenStorage, type AuthSession } from '@repo/auth';
-import { createStaticFlagClient } from '@repo/config';
-import { createQueryClient } from '@repo/data';
-import { createI18n, detectLocale } from '@repo/i18n';
-import { createDefaultStorage, createPreferencesStore } from '@repo/state';
-import { consoleTransport, createLogger, isDefined } from '@repo/utils';
+} from '@repo/core/analytics';
+import { createApiClient, createEndpoints } from '@repo/core/api-client';
+import { createAuthSession, createPlatformTokenStorage, type AuthSession } from '@repo/core/auth';
+import { createStaticFlagClient } from '@repo/core/config';
+import { createQueryClient } from '@repo/core/data';
+import { createI18n, detectLocale } from '@repo/core/i18n';
+import { createDefaultStorage, createPreferencesStore } from '@repo/core/state';
+import { consoleTransport, createLogger, isDefined } from '@repo/core/utils';
 
 import { APP_NAME, APP_VERSION, ENVIRONMENT, PLATFORM } from './app-info';
 import { env } from './env';

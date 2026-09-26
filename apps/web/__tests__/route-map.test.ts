@@ -1,4 +1,4 @@
-import { routes } from '@repo/domain';
+import { routes } from '@repo/core/domain';
 import fs from 'node:fs';
 import path from 'node:path';
 

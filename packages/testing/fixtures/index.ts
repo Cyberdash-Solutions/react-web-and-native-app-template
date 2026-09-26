@@ -1,4 +1,11 @@
-import type { AppConfig, AuthTokens, Greeting, Message, SignInInput, User } from '@repo/domain';
+import type {
+  AppConfig,
+  AuthTokens,
+  Greeting,
+  Message,
+  SignInInput,
+  User,
+} from '@repo/core/domain';
 
 import appConfig from './app-config.json';
 import credentials from './credentials.json';
@@ -9,7 +16,7 @@ import user from './user.json';
 
 /**
  * 13.18 — Static JSON fixtures shared by unit tests (MSW), the mock API used for E2E / local dev
- * (tooling/mock-api), Playwright and Maestro. Typed against domain types so they can't drift
+ * (packages/testing/mock-api), Playwright and Maestro. Typed against domain types so they can't drift
  * (13.6); fixtures.test.ts also validates them against the Zod schemas.
  */
 export const fixtures = {

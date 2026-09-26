@@ -10,6 +10,6 @@
     "declarationDir": null,
     "tsBuildInfoFile": null
   },
-  "include": ["fixtures", "factories", "mocks", "render", "fixtures/*.json"],
+  "include": ["fixtures", "factories", "mocks", "render", "contracts", "fixtures/*.json"],
   "exclude": []
 }

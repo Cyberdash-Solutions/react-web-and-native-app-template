@@ -1,5 +1,5 @@
-import { useConsent } from '@repo/analytics';
-import { useTranslation } from '@repo/i18n';
+import { useConsent } from '@repo/core/analytics';
+import { useTranslation } from '@repo/core/i18n';
 import { Button, Stack, Text, useTheme } from '@repo/ui';
 import { Link } from 'expo-router';
 import { View } from 'react-native';

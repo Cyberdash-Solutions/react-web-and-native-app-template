@@ -1,7 +1,7 @@
-import { useAnalytics, useTrackScreen } from '@repo/analytics';
-import { useAuthSession } from '@repo/auth';
-import { normalizeError, signInInputSchema } from '@repo/domain';
-import { useTranslation } from '@repo/i18n';
+import { useAnalytics, useTrackScreen } from '@repo/core/analytics';
+import { useAuthSession } from '@repo/core/auth';
+import { normalizeError, signInInputSchema } from '@repo/core/domain';
+import { useTranslation } from '@repo/core/i18n';
 import { a11y, Button, Card, Screen, Stack, Text, TextField } from '@repo/ui';
 import { useRouter } from 'expo-router';
 import Head from 'expo-router/head';

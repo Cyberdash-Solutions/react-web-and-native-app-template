@@ -1,7 +1,7 @@
-import { useTrackScreen } from '@repo/analytics';
-import { useAuth } from '@repo/auth';
-import { useMessage } from '@repo/data';
-import { formatDate, useTranslation } from '@repo/i18n';
+import { useTrackScreen } from '@repo/core/analytics';
+import { useAuth } from '@repo/core/auth';
+import { useMessage } from '@repo/core/data';
+import { formatDate, useTranslation } from '@repo/core/i18n';
 import { Card, Screen, Text } from '@repo/ui';
 import { Redirect, Stack, useLocalSearchParams } from 'expo-router';
 

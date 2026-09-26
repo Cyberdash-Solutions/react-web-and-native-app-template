@@ -1,4 +1,4 @@
-import { basePublicEnvSchema, createEnv } from '@repo/config';
+import { basePublicEnvSchema, createEnv } from '@repo/core/config';
 
 /**
  * 1.12 / 4.5 — The mobile app's own env schema instance. Expo only inlines

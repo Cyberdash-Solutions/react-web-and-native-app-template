@@ -1,4 +1,4 @@
-import { queryKeys } from '@repo/data';
+import { queryKeys } from '@repo/core/data';
 import * as BackgroundTask from 'expo-background-task';
 import * as TaskManager from 'expo-task-manager';
 
@@ -6,7 +6,7 @@ import type { Services } from './services';
 
 /**
  * 11.1 / 3.4 — Mobile background sync via the OS scheduler (BGTaskScheduler / WorkManager).
- * The web equivalent is the service worker in packages/web-pwa.
+ * The web equivalent is the service worker in apps/web/src/pwa.ts.
  *
  * TaskManager.defineTask must run at module scope, so the task reads services through `bind`.
  */

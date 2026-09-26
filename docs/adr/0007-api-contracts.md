@@ -6,9 +6,9 @@
 
 ## Decision
 
-The Zod schemas in `packages/domain` are the consumer contract. `packages/contracts` calls a real
+The Zod schemas in `packages/core/src/domain` are the consumer contract. `packages/testing/contracts` calls a real
 backend (`CONTRACT_API_URL`; the seeded mock API when unset) and validates every response against
-them. Frozen schema snapshots per still-supported mobile release (`src/clients/v1.0.0.ts`) keep
+them. Frozen schema snapshots per still-supported mobile release (`clients/v1.0.0.ts`) keep
 running until that version is retired (13.14), which is also when `minSupportedVersion.mobile`
 is raised on the server (12.6).
 

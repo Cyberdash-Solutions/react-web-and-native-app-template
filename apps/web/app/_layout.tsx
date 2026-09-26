@@ -1,5 +1,5 @@
-import { useConsent } from '@repo/analytics';
-import { registerServiceWorker } from '@repo/web-pwa';
+import { useConsent } from '@repo/core/analytics';
+import { registerServiceWorker } from '../src/pwa';
 import { Slot } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';

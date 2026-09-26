@@ -7,7 +7,7 @@
 ## Decision
 
 Each app has its own Expo Router tree (mobile: native Stack with modal sign-in; web: header +
-`<Slot/>`). Route names and paths live in `packages/domain/src/routes.ts`; apps build links with
+`<Slot/>`). Route names and paths live in `packages/core/src/domain/routes.ts`; apps build links with
 `href('message', { id })`, and `matchPath()` resolves any inbound URL. A test in each app asserts
 every shared route has a screen file, so a push notification or email link never lands on
 "not found".

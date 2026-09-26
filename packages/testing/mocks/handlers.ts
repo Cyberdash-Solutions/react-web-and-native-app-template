@@ -3,7 +3,7 @@ import { http, HttpResponse, type HttpHandler } from 'msw';
 import { fixtures } from '../fixtures';
 import { createMockBackend, type MockBackend } from './backend';
 
-/** Default base URL — matches EXPO_PUBLIC_API_URL's default in @repo/config. */
+/** Default base URL — matches EXPO_PUBLIC_API_URL's default in @repo/core/config. */
 export const API_URL = 'http://localhost:4000';
 
 /** 13.10 — MSW handlers, backed by the shared mock backend. Usable in Node, the browser and Storybook. */

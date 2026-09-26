@@ -6,17 +6,17 @@ export const ROOT = path.resolve(import.meta.dirname, '../..');
 
 /**
  * Everything that belongs to one deployment target. Shared packages are never listed: they are
- * target-agnostic and always stay (1.8). Platform-scoped packages (1.11) go with their target so
- * a web-only repo carries no native modules and a mobile-only repo no web-only code.
+ * target-agnostic and always stay (1.8). Platform-only code (1.11: push on mobile, the PWA on
+ * web) lives inside its app, so it leaves with the app folder.
  */
 export const TARGETS = {
   mobile: {
-    paths: ['apps/mobile', '.github/workflows/mobile.yml', 'packages/native-push'],
-    codeowners: ['/apps/mobile/', '/packages/native-push/'],
+    paths: ['apps/mobile', '.github/workflows/mobile.yml'],
+    codeowners: ['/apps/mobile/'],
   },
   web: {
-    paths: ['apps/web', '.github/workflows/web.yml', 'packages/web-pwa'],
-    codeowners: ['/apps/web/', '/packages/web-pwa/'],
+    paths: ['apps/web', '.github/workflows/web.yml'],
+    codeowners: ['/apps/web/'],
   },
 };
 

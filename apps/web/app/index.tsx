@@ -1,8 +1,8 @@
-import { useTrackScreen, useAnalytics } from '@repo/analytics';
-import { useAuth } from '@repo/auth';
-import { useFeatureFlag } from '@repo/config/react';
-import { useGreeting, useMessages } from '@repo/data';
-import { formatRelativeTime, useTranslation } from '@repo/i18n';
+import { useTrackScreen, useAnalytics } from '@repo/core/analytics';
+import { useAuth } from '@repo/core/auth';
+import { useFeatureFlag } from '@repo/core/config/react';
+import { useGreeting, useMessages } from '@repo/core/data';
+import { formatRelativeTime, useTranslation } from '@repo/core/i18n';
 import { a11y, Button, Card, Screen, Stack, Text } from '@repo/ui';
 import { Link } from 'expo-router';
 import Head from 'expo-router/head';

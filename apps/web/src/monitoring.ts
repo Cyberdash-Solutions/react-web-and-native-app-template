@@ -1,4 +1,4 @@
-import type { LogTransport } from '@repo/utils';
+import type { LogTransport } from '@repo/core/utils';
 import type * as SentryModule from '@sentry/react';
 import { onCLS, onINP, onLCP, onTTFB, type Metric } from 'web-vitals';
 

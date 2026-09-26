@@ -1,5 +1,5 @@
-import { useUpgradeRequired } from '@repo/data';
-import { useTranslation } from '@repo/i18n';
+import { useUpgradeRequired } from '@repo/core/data';
+import { useTranslation } from '@repo/core/i18n';
 import { Button, Card, Screen, Text } from '@repo/ui';
 import type { ReactNode } from 'react';
 import { Linking, Platform } from 'react-native';

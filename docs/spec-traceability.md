@@ -14,61 +14,61 @@ lives in this template.
 
 ## 1. Monorepo foundation
 
-| #    | Item                                          | Where                                                                                                         | Status  |
-| ---- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | ------- |
-| 1.1  | pnpm workspaces + Turborepo                   | `pnpm-workspace.yaml`, `turbo.json`, [ADR 0001](adr/0001-monorepo-tooling.md)                                 | ✅      |
-| 1.2  | Metro config for symlinked packages           | `apps/*/metro.config.js` (Expo monorepo defaults)                                                             | ✅      |
-| 1.3  | One React / RN / RNW version                  | pnpm `catalog:` + `overrides` in `pnpm-workspace.yaml`; `pnpm deps:check` (syncpack) in CI                    | ✅      |
-| 1.4  | No RN / DOM in shared packages unless split   | `tooling/eslint-config` (`no-restricted-imports`, `no-restricted-globals`)                                    | ✅      |
-| 1.5  | `.native.ts` / `.web.ts` splits               | e.g. `packages/state/src/storage.*.ts`, `packages/auth/src/token-storage.*.ts`                                | ✅      |
-| 1.6  | Packages compiled from source                 | `"exports": { ".": "./src/index.ts" }` in every package                                                       | ✅      |
-| 1.7  | CODEOWNERS                                    | `.github/CODEOWNERS`                                                                                          | ✅      |
-| 1.8  | `pnpm create-app --targets mobile\|web\|both` | `tooling/generators/create-app.mjs`                                                                           | ✅      |
-| 1.9  | `pnpm gen add-target` / `remove-target`       | `tooling/generators/gen.mjs` (restores from git history or the template repo)                                 | ✅      |
-| 1.10 | Nothing hardcodes app names                   | root scripts are `turbo run …`; CI matrix from `tooling/scripts/list-apps.mjs`                                | ✅      |
-| 1.11 | Platform-scoped packages                      | `packages/native-push` (mobile), `packages/web-pwa` (web); lint forbids cross use; `auto-install-peers=false` | ✅      |
-| 1.12 | Self-contained apps                           | each app: `package.json`, `app.config.ts`, version, `.env.example`, `src/env.ts`, `eas.json` / `vercel.json`  | ✅      |
-| 1.13 | Apps never import each other                  | ESLint rule in `tooling/eslint-config`                                                                        | ✅      |
-| 1.14 | Each app installs/builds/tests in isolation   | `isolation` job in `.github/workflows/ci.yml` (`--filter <app>...`)                                           | ✅      |
-| 1.15 | Independent pipelines                         | `.github/workflows/web.yml`, `mobile.yml` (turbo-ignore gating, separate deploy environments)                 | 🔌      |
-| 1.16 | EAS Build/Submit/Update; static web export    | `apps/mobile/eas.json`, `mobile.yml`; `expo export --platform web` in `apps/web`                              | ✅ / 🔌 |
-| 1.17 | Per-app release identity                      | `pnpm release <app> <bump>` → tag `<app>@x.y.z`, `CHANGELOG.md`, Sentry release `<app>@x.y.z`                 | ✅      |
-| 1.18 | Per-app environments and secrets              | GitHub environments `web-*` / `mobile-*` in workflows; per-app `.env.example`                                 | 🔌      |
+| #    | Item                                          | Where                                                                                                                                                          | Status  |
+| ---- | --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| 1.1  | pnpm workspaces + Turborepo                   | `pnpm-workspace.yaml`, `turbo.json`, [ADR 0001](adr/0001-monorepo-tooling.md); shared code in 3 packages — [ADR 0008](adr/0008-consolidate-shared-packages.md) | ✅      |
+| 1.2  | Metro config for symlinked packages           | `apps/*/metro.config.js` (Expo monorepo defaults)                                                                                                              | ✅      |
+| 1.3  | One React / RN / RNW version                  | pnpm `catalog:` + `overrides` in `pnpm-workspace.yaml`; `pnpm deps:check` (syncpack) in CI                                                                     | ✅      |
+| 1.4  | No RN / DOM in shared code unless split       | `tooling/eslint-config` (`no-restricted-imports`, `no-restricted-globals`) applied per folder of `packages/core/src` (`packages/core/eslint.config.mjs`)       | ✅      |
+| 1.5  | `.native.ts` / `.web.ts` splits               | e.g. `packages/core/src/state/storage.*.ts`, `packages/core/src/auth/token-storage.*.ts`                                                                       | ✅      |
+| 1.6  | Packages compiled from source                 | `"exports"` point at `.ts` source, e.g. `@repo/core/auth` → `packages/core/src/auth/index.ts`                                                                  | ✅      |
+| 1.7  | CODEOWNERS                                    | `.github/CODEOWNERS`                                                                                                                                           | ✅      |
+| 1.8  | `pnpm create-app --targets mobile\|web\|both` | `tooling/generators/create-app.mjs`                                                                                                                            | ✅      |
+| 1.9  | `pnpm gen add-target` / `remove-target`       | `tooling/generators/gen.mjs` (restores from git history or the template repo)                                                                                  | ✅      |
+| 1.10 | Nothing hardcodes app names                   | root scripts are `turbo run …`; CI matrix from `tooling/scripts/list-apps.mjs`                                                                                 | ✅      |
+| 1.11 | Platform-exclusive capabilities               | push lives in `apps/mobile/src/push.ts`, the PWA in `apps/web/src/pwa.ts` + `public/sw.js`, so each leaves with its app; `auto-install-peers=false`            | ✅      |
+| 1.12 | Self-contained apps                           | each app: `package.json`, `app.config.ts`, version, `.env.example`, `src/env.ts`, `eas.json` / `vercel.json`                                                   | ✅      |
+| 1.13 | Apps never import each other                  | ESLint rule in `tooling/eslint-config`                                                                                                                         | ✅      |
+| 1.14 | Each app installs/builds/tests in isolation   | `isolation` job in `.github/workflows/ci.yml` (`--filter <app>...`)                                                                                            | ✅      |
+| 1.15 | Independent pipelines                         | `.github/workflows/web.yml`, `mobile.yml` (turbo-ignore gating, separate deploy environments)                                                                  | 🔌      |
+| 1.16 | EAS Build/Submit/Update; static web export    | `apps/mobile/eas.json`, `mobile.yml`; `expo export --platform web` in `apps/web`                                                                               | ✅ / 🔌 |
+| 1.17 | Per-app release identity                      | `pnpm release <app> <bump>` → tag `<app>@x.y.z`, `CHANGELOG.md`, Sentry release `<app>@x.y.z`                                                                  | ✅      |
+| 1.18 | Per-app environments and secrets              | GitHub environments `web-*` / `mobile-*` in workflows; per-app `.env.example`                                                                                  | 🔌      |
 
 **1.11 caveat:** an app's own dependency tree carries no modules for the other platform, and
-`create-app` / `remove-target` delete the other platform's scoped package. Shared packages keep
-their platform adapters as _optional peers_, dev-installed only so their `.native.ts` / `.web.ts`
-splits can be tested — e.g. a web-only repo still dev-installs `react-native-mmkv` for
-`packages/state`. None of it reaches the web bundle.
+`create-app` / `remove-target` delete the other platform's app (with its push or PWA code).
+`@repo/core` keeps its platform adapters as _optional peers_, dev-installed only so its
+`.native.ts` / `.web.ts` splits can be tested — e.g. a web-only repo still dev-installs
+`react-native-mmkv` for `packages/core/src/state`. None of it reaches the web bundle.
 
 ## 2. Architecture and code organization
 
-| #   | Item                                    | Where                                                                             | Status |
-| --- | --------------------------------------- | --------------------------------------------------------------------------------- | ------ |
-| 2.1 | Domain logic, Zod schemas, API contract | `packages/domain` (swap for OpenAPI/tRPC codegen)                                 | ✅     |
-| 2.2 | TanStack Query hooks and keys           | `packages/data`                                                                   | ✅     |
-| 2.3 | Client state with platform persistence  | `packages/state` (Zustand; MMKV / localStorage)                                   | ✅     |
-| 2.4 | Per-app navigation, shared route map    | Expo Router in each app; `packages/domain/src/routes.ts`; route-map tests per app | ✅     |
-| 2.5 | Solito / unified navigation (option)    | Not adopted — [ADR 0005](adr/0005-navigation.md)                                  | —      |
+| #   | Item                                    | Where                                                                                  | Status |
+| --- | --------------------------------------- | -------------------------------------------------------------------------------------- | ------ |
+| 2.1 | Domain logic, Zod schemas, API contract | `packages/core/src/domain` (swap for OpenAPI/tRPC codegen)                             | ✅     |
+| 2.2 | TanStack Query hooks and keys           | `packages/core/src/data`                                                               | ✅     |
+| 2.3 | Client state with platform persistence  | `packages/core/src/state` (Zustand; MMKV / localStorage)                               | ✅     |
+| 2.4 | Per-app navigation, shared route map    | Expo Router in each app; `packages/core/src/domain/routes.ts`; route-map tests per app | ✅     |
+| 2.5 | Solito / unified navigation (option)    | Not adopted — [ADR 0005](adr/0005-navigation.md)                                       | —      |
 
 ## 3. Networking and data
 
-| #   | Item                                         | Where                                                                                         | Status |
-| --- | -------------------------------------------- | --------------------------------------------------------------------------------------------- | ------ |
-| 3.1 | One api-client                               | `packages/api-client/src/client.ts`                                                           | ✅     |
-| 3.2 | Pagination, optimistic updates, invalidation | `packages/data/src/hooks.ts`, `keys.ts`                                                       | ✅     |
-| 3.3 | Offline/persistence adapters; network status | `packages/state` adapters; `packages/data/src/network.native.ts` / `.web.ts`                  | ✅     |
-| 3.4 | Real-time transport; background sync         | `packages/api-client/src/realtime.ts`; `apps/mobile/src/background.ts`; `packages/web-pwa` SW | ✅     |
+| #   | Item                                         | Where                                                                                                | Status |
+| --- | -------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ------ |
+| 3.1 | One api-client                               | `packages/core/src/api-client/client.ts`                                                             | ✅     |
+| 3.2 | Pagination, optimistic updates, invalidation | `packages/core/src/data/hooks.ts`, `keys.ts`                                                         | ✅     |
+| 3.3 | Offline/persistence adapters; network status | `packages/core/src/state` adapters; `packages/core/src/data/network.native.ts` / `.web.ts`           | ✅     |
+| 3.4 | Real-time transport; background sync         | `packages/core/src/api-client/realtime.ts`; `apps/mobile/src/background.ts`; `apps/web/public/sw.js` | ✅     |
 
 ## 4. Security
 
-| #   | Item                                   | Where                                                                                                                             | Status                         |
-| --- | -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
-| 4.1 | Auth state machine + injected storage  | `packages/auth/src/machine.ts`, `session.ts`, `types.ts`                                                                          | ✅                             |
-| 4.2 | Keychain/Keystore; httpOnly BFF cookie | `token-storage.native.ts` / `.web.ts`; E2E asserts the cookie is httpOnly — [ADR 0004](adr/0004-auth-token-storage.md)            | ✅                             |
-| 4.3 | OAuth PKCE / redirect, biometrics, CSP | `packages/auth/src/oauth.*.ts`, `biometrics.*.ts`; `apps/mobile/src/components/BiometricGate.tsx`; `apps/web/vercel.json` headers | ✅ (OAuth: 🧩 provider config) |
-| 4.4 | Pinning, root detection, screenshots   | `apps/mobile/src/security.ts` — screenshot protection live on sign-in; pinning + integrity hooks                                  | ✅ / 🧩                        |
-| 4.5 | No secrets in packages; env schema     | `packages/config/src/env.ts` (rejects non-`EXPO_PUBLIC_*` keys), `apps/*/src/env.ts`                                              | ✅                             |
+| #   | Item                                   | Where                                                                                                                                  | Status                         |
+| --- | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
+| 4.1 | Auth state machine + injected storage  | `packages/core/src/auth/machine.ts`, `session.ts`, `types.ts`                                                                          | ✅                             |
+| 4.2 | Keychain/Keystore; httpOnly BFF cookie | `token-storage.native.ts` / `.web.ts`; E2E asserts the cookie is httpOnly — [ADR 0004](adr/0004-auth-token-storage.md)                 | ✅                             |
+| 4.3 | OAuth PKCE / redirect, biometrics, CSP | `packages/core/src/auth/oauth.*.ts`, `biometrics.*.ts`; `apps/mobile/src/components/BiometricGate.tsx`; `apps/web/vercel.json` headers | ✅ (OAuth: 🧩 provider config) |
+| 4.4 | Pinning, root detection, screenshots   | `apps/mobile/src/security.ts` — screenshot protection live on sign-in; pinning + integrity hooks                                       | ✅ / 🧩                        |
+| 4.5 | No secrets in packages; env schema     | `packages/core/src/config/env.ts` (rejects non-`EXPO_PUBLIC_*` keys), `apps/*/src/env.ts`                                              | ✅                             |
 
 The spec mentions `NEXT_PUBLIC_*`; both apps here are Expo, so both use `EXPO_PUBLIC_*`.
 
@@ -76,7 +76,7 @@ The spec mentions `NEXT_PUBLIC_*`; both apps here are Expo, so both use `EXPO_PU
 
 | #   | Item                                   | Where                                                                                      | Status |
 | --- | -------------------------------------- | ------------------------------------------------------------------------------------------ | ------ |
-| 5.1 | Error types, normalization, messages   | `packages/domain/src/errors.ts`; messages in `packages/i18n` `errors:*`                    | ✅     |
+| 5.1 | Error types, normalization, messages   | `packages/core/src/domain/errors.ts`; messages in `packages/core/src/i18n` `errors:*`      | ✅     |
 | 5.2 | Error boundary with platform fallbacks | `packages/ui/src/components/ErrorBoundary.tsx`, `ErrorFallback.native/web.tsx`             | ✅     |
 | 5.3 | Native crashes; `window.onerror`       | `apps/mobile/src/monitoring.ts` (Sentry native + ErrorUtils); `apps/web/src/monitoring.ts` | ✅     |
 
@@ -84,10 +84,10 @@ The spec mentions `NEXT_PUBLIC_*`; both apps here are Expo, so both use `EXPO_PU
 
 | #   | Item                                   | Where                                                                                  | Status              |
 | --- | -------------------------------------- | -------------------------------------------------------------------------------------- | ------------------- |
-| 6.1 | Event taxonomy, typed `track()`, sinks | `packages/analytics/src/events.ts`, `client.ts`, `sink.native.ts` / `.web.ts`          | ✅ (vendor SDK: 🧩) |
-| 6.2 | Logger with PII scrubbing              | `packages/utils/src/logger.ts`                                                         | ✅                  |
+| 6.1 | Event taxonomy, typed `track()`, sinks | `packages/core/src/analytics/events.ts`, `client.ts`, `sink.native.ts` / `.web.ts`     | ✅ (vendor SDK: 🧩) |
+| 6.2 | Logger with PII scrubbing              | `packages/core/src/utils/logger.ts`                                                    | ✅                  |
 | 6.3 | Sentry, separate projects, source maps | `apps/*/src/monitoring.ts`; Sentry Expo plugin + Metro config; web upload in `web.yml` | 🔌                  |
-| 6.4 | Feature-flag keys + typed hook         | `packages/config/src/flags.ts`, `packages/config/src/react.tsx`                        | ✅ (provider: 🧩)   |
+| 6.4 | Feature-flag keys + typed hook         | `packages/core/src/config/flags.ts`, `packages/core/src/config/react.tsx`              | ✅ (provider: 🧩)   |
 | 6.5 | Startup / frames; Core Web Vitals      | Sentry RN tracing + Flashlight job; `web-vitals` in `apps/web/src/monitoring.ts`       | ✅ / 🔌             |
 
 ## 7. Performance
@@ -119,19 +119,19 @@ The spec mentions `NEXT_PUBLIC_*`; both apps here are Expo, so both use `EXPO_PU
 
 ## 10. Internationalization
 
-| #    | Item                                    | Where                                            | Status  |
-| ---- | --------------------------------------- | ------------------------------------------------ | ------- |
-| 10.1 | Translations, namespaces, plurals, Intl | `packages/i18n` (i18next; `formatters.ts`)       | ✅      |
-| 10.2 | Translation workflow; missing-key CI    | `crowdin.yml`; `pnpm i18n:check` in CI           | ✅ / 🔌 |
-| 10.3 | Device vs URL locale; RTL               | `packages/i18n/src/locale.native.ts` / `.web.ts` | ✅      |
+| #    | Item                                    | Where                                                 | Status  |
+| ---- | --------------------------------------- | ----------------------------------------------------- | ------- |
+| 10.1 | Translations, namespaces, plurals, Intl | `packages/core/src/i18n` (i18next; `formatters.ts`)   | ✅      |
+| 10.2 | Translation workflow; missing-key CI    | `crowdin.yml`; `pnpm i18n:check` in CI                | ✅ / 🔌 |
+| 10.3 | Device vs URL locale; RTL               | `packages/core/src/i18n/locale.native.ts` / `.web.ts` | ✅      |
 
 ## 11. Device and platform integration
 
-| #    | Item                                    | Where                                                                                         | Status |
-| ---- | --------------------------------------- | --------------------------------------------------------------------------------------------- | ------ |
-| 11.1 | Permissions, push, background, AppState | `packages/native-push`; `apps/mobile/src/background.ts`; AppState in `data/network.native.ts` | ✅     |
-| 11.2 | Service worker, PWA install, web push   | `packages/web-pwa` (SW, `useInstallPrompt`, `subscribeToWebPush`); install button in settings | ✅     |
-| 11.3 | Notification schema + deep-link map     | `packages/domain/src/notifications.ts`, `routes.ts`; deep-link E2E + Maestro flow             | ✅     |
+| #    | Item                                    | Where                                                                                                                                          | Status |
+| ---- | --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| 11.1 | Permissions, push, background, AppState | `apps/mobile/src/push.ts`; `apps/mobile/src/background.ts`; AppState in `data/network.native.ts`                                               | ✅     |
+| 11.2 | Service worker, PWA install, web push   | `apps/web/src/pwa.ts` (`registerServiceWorker`, `useInstallPrompt`, `subscribeToWebPush`), `apps/web/public/sw.js`; install button in settings | ✅     |
+| 11.3 | Notification schema + deep-link map     | `packages/core/src/domain/notifications.ts`, `routes.ts`; deep-link E2E + Maestro flow                                                         | ✅     |
 
 ## 12. Build, release and delivery
 
@@ -146,44 +146,44 @@ The spec mentions `NEXT_PUBLIC_*`; both apps here are Expo, so both use `EXPO_PU
 
 ## 13. Testing and quality
 
-| #     | Item                                       | Where                                                                                                                      | Status  |
-| ----- | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- | ------- |
-| 13.1  | Bottom-heavy pyramid                       | ~225 Jest runs (unit, component, integration, contract; counted per platform) vs. 13 Playwright journeys + 4 Maestro flows | ✅      |
-| 13.2  | Packages own their tests                   | tests next to code in every package                                                                                        | ✅      |
-| 13.3  | `@repo/testing` dev-only, lint-enforced    | `tooling/eslint-config` rule; [ADR 0006](adr/0006-testing-architecture.md)                                                 | ✅      |
-| 13.4  | jest-expo multi-project (ios/android/web)  | `tooling/jest-config` `universal()`                                                                                        | ✅      |
-| 13.5  | Pure packages in Node                      | `tooling/jest-config` `node()` (domain, utils, config, api-client, i18n formatters)                                        | ✅      |
-| 13.6  | Zod valid/invalid tests; typed factories   | `packages/domain/src/schemas.test.ts`; `packages/testing/factories`, `fixtures/fixtures.test.ts`                           | ✅      |
-| 13.7  | RNTL for shared/mobile; RTL for web        | `packages/testing/render` (RNTL) and `render/web.tsx` (RTL)                                                                | ✅      |
-| 13.8  | `renderWithProviders`                      | `packages/testing/render/context.tsx`                                                                                      | ✅      |
-| 13.9  | Queries by role/label/text                 | all component and screen tests                                                                                             | ✅      |
-| 13.10 | Data hooks against MSW                     | `packages/data/src/hooks.test.tsx`, `packages/testing/mocks`                                                               | ✅      |
-| 13.11 | Auth machine through refresh/expiry/logout | `packages/auth/src/session.test.ts`                                                                                        | ✅      |
-| 13.12 | Swappable persistence adapters             | `packages/state/src/storage.test.ts`                                                                                       | ✅      |
-| 13.13 | Consumer contracts in CI                   | `packages/contracts` — [ADR 0007](adr/0007-api-contracts.md)                                                               | ✅      |
-| 13.14 | Old-client contract suites                 | `packages/contracts/src/clients/v1.0.0.ts`                                                                                 | ✅      |
-| 13.15 | Maestro + shared subflows                  | `apps/mobile/e2e`, `tooling/maestro/subflows`                                                                              | 🔌      |
-| 13.16 | Playwright on static export / preview      | `apps/web/e2e`, `tooling/playwright-config` (Chromium, WebKit, Firefox, mobile)                                            | ✅      |
-| 13.17 | Critical journeys only                     | sign-in, profile update, deep links, consent (web + mobile)                                                                | ✅      |
-| 13.18 | Seeded, resettable test backend            | `tooling/mock-api` (`POST /__reset`) fed by `packages/testing/fixtures`                                                    | ✅      |
-| 13.19 | Visual regression via Chromatic            | `visual` job in `ci.yml`                                                                                                   | 🔌      |
-| 13.20 | axe in Playwright + on stories; RNTL a11y  | `apps/web/e2e`, `packages/ui/e2e/stories.a11y.spec.ts`, [checklist](accessibility-checklist.md)                            | ✅      |
-| 13.21 | Lighthouse CI, Reassure, Flashlight        | `apps/web/lighthouserc.json`; `packages/ui/src/components/Button.perf-test.tsx`; `flashlight` job                          | ✅ / 🔌 |
-| 13.22 | Affected on PRs, full on main + nightly    | `ci.yml`, `nightly.yml`                                                                                                    | ✅      |
-| 13.23 | Per-package coverage; changed-file gate    | `coverageThreshold` in domain/data/auth; `tooling/scripts/check-changed-coverage.mjs`                                      | ✅      |
-| 13.24 | One retry, then quarantine with an issue   | `jest.retryTimes(1)` in CI; Playwright `retries: 1`; `tooling/scripts/report-flaky.mjs`                                    | ✅      |
-| 13.25 | Required checks                            | `ci.yml` (typecheck, lint, unit, component, contract) + `web.yml` E2E; mobile E2E on main                                  | ✅      |
-| 13.26 | Mobile device matrix                       | `e2e` matrix in `mobile.yml` (min/latest iOS + Android, small screen)                                                      | 🔌      |
-| 13.27 | Strict TS, project references, shared lint | `tooling/tsconfig`, root `tsconfig.json` (`tsc -b`), `sync-ts-references.mjs`, `tooling/eslint-config`                     | ✅      |
+| #     | Item                                               | Where                                                                                                                                                                                                                                                  | Status  |
+| ----- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------- |
+| 13.1  | Bottom-heavy pyramid                               | ~225 Jest runs (unit, component, integration, contract; counted per platform) vs. 13 Playwright journeys + 4 Maestro flows                                                                                                                             | ✅      |
+| 13.2  | Shared code owns its tests                         | tests next to the code in `packages/core`, `packages/ui`; apps test only platform-specific code                                                                                                                                                        | ✅      |
+| 13.3  | `@repo/testing` dev-only, lint-enforced            | `tooling/eslint-config` rule; [ADR 0006](adr/0006-testing-architecture.md)                                                                                                                                                                             | ✅      |
+| 13.4  | jest-expo multi-project (ios/android/web)          | `tooling/jest-config` `universal()`; `packages/core/jest.config.js` runs areas with platform splits per platform                                                                                                                                       | ✅      |
+| 13.5  | Pure code in Node                                  | `node()` project in `packages/core/jest.config.js` (domain, utils, config, api-client, i18n formatters)                                                                                                                                                | ✅      |
+| 13.6  | Zod valid/invalid tests; typed factories           | `packages/core/src/domain/schemas.test.ts`; `packages/testing/factories`, `fixtures/fixtures.test.ts`                                                                                                                                                  | ✅      |
+| 13.7  | RNTL for shared/mobile; RTL for web                | `packages/testing/render` (RNTL) and `render/web.tsx` (RTL)                                                                                                                                                                                            | ✅      |
+| 13.8  | `renderWithProviders`                              | `packages/testing/render/context.tsx`                                                                                                                                                                                                                  | ✅      |
+| 13.9  | Queries by role/label/text                         | all component and screen tests                                                                                                                                                                                                                         | ✅      |
+| 13.10 | Data hooks against MSW                             | `packages/core/src/data/hooks.test.tsx`, `packages/testing/mocks`                                                                                                                                                                                      | ✅      |
+| 13.11 | Auth machine through refresh/expiry/logout         | `packages/core/src/auth/session.test.ts`                                                                                                                                                                                                               | ✅      |
+| 13.12 | Swappable persistence adapters                     | `packages/core/src/state/storage.test.ts`                                                                                                                                                                                                              | ✅      |
+| 13.13 | Consumer contracts in CI                           | `packages/testing/contracts` — [ADR 0007](adr/0007-api-contracts.md)                                                                                                                                                                                   | ✅      |
+| 13.14 | Old-client contract suites                         | `packages/testing/contracts/clients/v1.0.0.ts`                                                                                                                                                                                                         | ✅      |
+| 13.15 | Maestro + shared subflows                          | `apps/mobile/e2e`, `tooling/maestro/subflows`                                                                                                                                                                                                          | 🔌      |
+| 13.16 | Playwright on static export / preview              | `apps/web/e2e`, `tooling/playwright-config` (Chromium, WebKit, Firefox, mobile)                                                                                                                                                                        | ✅      |
+| 13.17 | Critical journeys only                             | sign-in, profile update, deep links, consent (web + mobile)                                                                                                                                                                                            | ✅      |
+| 13.18 | Seeded, resettable test backend                    | `packages/testing/mock-api` (`POST /__reset`) fed by `packages/testing/fixtures`                                                                                                                                                                       | ✅      |
+| 13.19 | Visual regression via Chromatic                    | `visual` job in `ci.yml`                                                                                                                                                                                                                               | 🔌      |
+| 13.20 | axe in Playwright + on stories; RNTL a11y          | `apps/web/e2e`, `packages/ui/e2e/stories.a11y.spec.ts`, [checklist](accessibility-checklist.md)                                                                                                                                                        | ✅      |
+| 13.21 | Lighthouse CI, Reassure, Flashlight                | `apps/web/lighthouserc.json`; `packages/ui/src/components/Button.perf-test.tsx`; `flashlight` job                                                                                                                                                      | ✅ / 🔌 |
+| 13.22 | Affected on PRs, full on main + nightly            | `ci.yml`, `nightly.yml`                                                                                                                                                                                                                                | ✅      |
+| 13.23 | Per-area coverage; fail on a drop in changed files | path-level `coverageThreshold` for domain / data / auth in `packages/core/jest.config.js`; `tooling/scripts/check-changed-coverage.mjs` compares changed files with main's coverage artifact (new files must meet per-folder bars from `package.json`) | ✅      |
+| 13.24 | One retry, then quarantine with an issue           | `jest.retryTimes(1)` in CI; Playwright `retries: 1`; `tooling/scripts/report-flaky.mjs`                                                                                                                                                                | ✅      |
+| 13.25 | Required checks                                    | `ci.yml` (typecheck, lint, unit, component, contract) + `web.yml` E2E; mobile E2E on main                                                                                                                                                              | ✅      |
+| 13.26 | Mobile device matrix                               | `e2e` matrix in `mobile.yml` (min/latest iOS + Android, small screen)                                                                                                                                                                                  | 🔌      |
+| 13.27 | Strict TS, project references, shared lint         | `tooling/tsconfig`, root `tsconfig.json` (`tsc -b`), `sync-ts-references.mjs`, `tooling/eslint-config`                                                                                                                                                 | ✅      |
 
 ## 14. Compliance and privacy
 
-| #    | Item                                    | Where                                                                                        | Status |
-| ---- | --------------------------------------- | -------------------------------------------------------------------------------------------- | ------ |
-| 14.1 | Consent gating in analytics             | `packages/analytics/src/consent.ts`, `client.ts` (drops events before opt-in); E2E + Maestro | ✅     |
-| 14.2 | ATT, privacy manifest, data-safety      | `apps/mobile/src/tracking.ts`; `ios.privacyManifests` in `app.config.ts`; store labels 🧩    | ✅     |
-| 14.3 | Cookie banner, GDPR/CCPA, cookie policy | `apps/web/src/components/ConsentBanner.tsx`, `/privacy`                                      | ✅     |
-| 14.4 | Data export / delete                    | `useExportData` / `useDeleteAccount` in `packages/data`; privacy screens in both apps        | ✅     |
+| #    | Item                                    | Where                                                                                             | Status |
+| ---- | --------------------------------------- | ------------------------------------------------------------------------------------------------- | ------ |
+| 14.1 | Consent gating in analytics             | `packages/core/src/analytics/consent.ts`, `client.ts` (drops events before opt-in); E2E + Maestro | ✅     |
+| 14.2 | ATT, privacy manifest, data-safety      | `apps/mobile/src/tracking.ts`; `ios.privacyManifests` in `app.config.ts`; store labels 🧩         | ✅     |
+| 14.3 | Cookie banner, GDPR/CCPA, cookie policy | `apps/web/src/components/ConsentBanner.tsx`, `/privacy`                                           | ✅     |
+| 14.4 | Data export / delete                    | `useExportData` / `useDeleteAccount` in `packages/core/src/data`; privacy screens in both apps    | ✅     |
 
 ## 15. Maintenance
 

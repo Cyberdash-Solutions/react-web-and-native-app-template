@@ -1,7 +1,7 @@
-import { useAnalytics, useTrackScreen } from '@repo/analytics';
-import { useAuth, useAuthSession } from '@repo/auth';
-import { useDeleteAccount, useExportData } from '@repo/data';
-import { useTranslation } from '@repo/i18n';
+import { useAnalytics, useTrackScreen } from '@repo/core/analytics';
+import { useAuth, useAuthSession } from '@repo/core/auth';
+import { useDeleteAccount, useExportData } from '@repo/core/data';
+import { useTranslation } from '@repo/core/i18n';
 import { Button, Card, Screen, Text } from '@repo/ui';
 import { useRouter } from 'expo-router';
 import Head from 'expo-router/head';

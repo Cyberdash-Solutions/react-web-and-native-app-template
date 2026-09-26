@@ -1,4 +1,4 @@
-import { buildPath, type RouteName, type RouteParams } from '@repo/domain';
+import { buildPath, type RouteName, type RouteParams } from '@repo/core/domain';
 import type { Href } from 'expo-router';
 
 /** 2.4 — links are built from the shared route map, so web and mobile agree on every URL. */
