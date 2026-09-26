@@ -104,6 +104,11 @@ jobs:
         with:
           name: web-dist
           path: apps/web/dist
+      # The export calls the API on load; the seeded mock API keeps the console clean (errors-in-console).
+      - name: Start the mock API
+        run: |
+          pnpm mock-api > mock-api.log 2>&1 &
+          npx -y wait-on http://localhost:4000/health
       - run: pnpm --filter web lighthouse
         env:
           LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}

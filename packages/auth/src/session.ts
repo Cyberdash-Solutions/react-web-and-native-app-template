@@ -50,7 +50,9 @@ export function createAuthSession({
 
   async function doRefresh(): Promise<boolean> {
     const refreshToken = await storage.getRefreshToken();
-    if (storage.kind === 'token' && !refreshToken) {
+    const noSession =
+      storage.kind === 'token' ? !refreshToken : storage.sessionHint?.get() === false;
+    if (noSession) {
       dispatch(state.status === 'unknown' ? { type: 'RESTORE_FAILED' } : { type: 'EXPIRED' });
       return false;
     }
@@ -59,6 +61,7 @@ export function createAuthSession({
     try {
       const tokens = await api().refresh(refreshToken ?? undefined);
       if (tokens.refreshToken) await storage.setRefreshToken(tokens.refreshToken);
+      storage.sessionHint?.set(true);
       // Restoring: fetch the user with the new access token before becoming signedIn.
       if (wasUnknown) {
         restoringToken = tokens.accessToken;
@@ -82,7 +85,10 @@ export function createAuthSession({
     } catch (e) {
       const error = normalizeError(e);
       const rejected = error.code === 'unauthorized' || error.code === 'forbidden';
-      if (rejected) await storage.setRefreshToken(null);
+      if (rejected) {
+        await storage.setRefreshToken(null);
+        storage.sessionHint?.set(false);
+      }
       if (wasUnknown) {
         // Offline at startup keeps the stored token so the next launch can restore it.
         dispatch({ type: 'RESTORE_FAILED' });
@@ -115,6 +121,7 @@ export function createAuthSession({
     async signIn(input: SignInInput) {
       const res = await api().signIn(input);
       await storage.setRefreshToken(res.refreshToken ?? null);
+      storage.sessionHint?.set(true);
       dispatch({
         type: 'SIGNED_IN',
         user: res.user,
@@ -151,12 +158,14 @@ export function createAuthSession({
         // Signing out locally must always succeed.
       }
       await storage.setRefreshToken(null);
+      storage.sessionHint?.set(false);
       dispatch({ type: 'SIGNED_OUT', reason });
     },
 
     /** Used when the server reports the session is gone (e.g. account deleted). */
     async expire() {
       await storage.setRefreshToken(null);
+      storage.sessionHint?.set(false);
       dispatch({ type: 'EXPIRED' });
     },
   };

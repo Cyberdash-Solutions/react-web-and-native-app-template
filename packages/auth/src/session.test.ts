@@ -79,6 +79,32 @@ describe('auth session', () => {
     expect(session.getState().status).toBe('signedIn');
   });
 
+  it('cookie sessions: skips the refresh probe when no session was ever established', async () => {
+    let refreshCalls = 0;
+    server.use(
+      http.post(
+        `${API_URL}/auth/refresh`,
+        () => (refreshCalls++, new HttpResponse(null, { status: 401 })),
+      ),
+    );
+    let active = false;
+    const storage = {
+      ...createMemoryTokenStorage(null, 'cookie'),
+      sessionHint: { get: () => active, set: (v: boolean) => void (active = v) },
+    };
+    const client = createApiClient({ baseUrl: API_URL, retries: 0 });
+    const api = createEndpoints(client);
+    const session = createAuthSession({ storage, api: () => api });
+    await session.restore();
+    expect(session.getState()).toEqual({ status: 'signedOut', reason: 'initial' });
+    expect(refreshCalls).toBe(0);
+
+    await session.signIn(fixtures.credentials);
+    expect(active).toBe(true);
+    await session.signOut();
+    expect(active).toBe(false);
+  });
+
   it('signs out locally even if the server call fails', async () => {
     const { session, storage } = setup();
     await session.signIn(fixtures.credentials);
