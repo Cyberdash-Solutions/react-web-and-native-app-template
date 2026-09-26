@@ -1,9 +1,9 @@
 /**
  * An in-memory fake of the backend API. It is the single implementation behind:
  *   - MSW handlers for unit / integration tests (13.10)
- *   - tooling/mock-api, the seeded test backend for local dev and E2E (13.18)
+ *   - packages/testing/mock-api, the seeded test backend for local dev and E2E (13.18)
  * It is written in erasable-syntax TypeScript with type-only imports so Node can run it
- * directly (tooling/mock-api) without a build step.
+ * directly (packages/testing/mock-api) without a build step.
  */
 import type { Fixtures } from '../fixtures/index.ts';
 

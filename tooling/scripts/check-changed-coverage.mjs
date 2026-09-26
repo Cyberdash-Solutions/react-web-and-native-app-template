@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // 13.23 — Fail on a coverage drop in *changed files* rather than on a global percentage.
-// Each workspace declares its bar in package.json → "coverage": { "changedFiles": <lines %> }
+// Each workspace declares its bar in package.json → "coverage": { "changedFiles": <lines %> },
+// or per folder: { "changedFiles": { "src/domain/": 90, "default": 70 } } (longest prefix wins).
 // (defaults below); domain, data and auth carry the highest bars.
 //   node tooling/scripts/check-changed-coverage.mjs --base <sha>
 import { execFileSync } from 'node:child_process';
@@ -52,19 +53,27 @@ for (const ws of listWorkspaces(root)) {
   const mine = changed.filter((f) => path.join(root, f).startsWith(ws.dir + path.sep));
   if (!mine.length || !fs.existsSync(summaryFile)) continue;
   const summary = JSON.parse(fs.readFileSync(summaryFile, 'utf8'));
-  const bar = ws.pkg.coverage?.changedFiles ?? DEFAULT_BAR;
+  const bars = ws.pkg.coverage?.changedFiles ?? DEFAULT_BAR;
+  const barFor = (rel) => {
+    if (typeof bars === 'number') return bars;
+    const prefix = Object.keys(bars)
+      .filter((k) => k !== 'default' && rel.startsWith(k))
+      .sort((a, b) => b.length - a.length)[0];
+    return prefix ? bars[prefix] : (bars.default ?? DEFAULT_BAR);
+  };
   for (const file of mine) {
+    const bar = barFor(path.relative(ws.dir, path.join(root, file)));
     const entry = summary[path.join(root, file)];
     if (!entry) continue; // not collected (e.g. app route files outside collectCoverageFrom)
     checked++;
     const pct = entry.lines.pct;
     if (pct < bar) {
       failures++;
-      console.error(`✖ ${file}: ${pct}% lines covered (bar for ${ws.name}: ${bar}%)`);
+      console.error(`✖ ${file}: ${pct}% lines covered (bar: ${bar}%)`);
     } else {
       console.log(`✔ ${file}: ${pct}%`);
     }
   }
 }
-console.log(`\n${checked} changed file(s) checked, ${failures} below their package's bar.`);
+console.log(`\n${checked} changed file(s) checked, ${failures} below their bar.`);
 process.exit(failures ? 1 : 0);

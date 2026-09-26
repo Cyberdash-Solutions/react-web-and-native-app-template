@@ -28,3 +28,6 @@ changed, and give a fast inner loop.
 
 - Upgrades of Expo / React Native happen in one catalog edit (15.1).
 - Packages can't be published as-is; if one ever is, add a build step and Changesets for it (12.5).
+
+> Update: shared code was consolidated from 14 packages into three — see
+> [ADR 0008](0008-consolidate-shared-packages.md).

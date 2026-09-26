@@ -1,6 +1,6 @@
-import { authenticateWithBiometrics, useAuth } from '@repo/auth';
-import { useTranslation } from '@repo/i18n';
-import { usePreferences } from '@repo/state';
+import { authenticateWithBiometrics, useAuth } from '@repo/core/auth';
+import { useTranslation } from '@repo/core/i18n';
+import { usePreferences } from '@repo/core/state';
 import { Button, Screen, Text } from '@repo/ui';
 import { useEffect, useState, type ReactNode } from 'react';
 

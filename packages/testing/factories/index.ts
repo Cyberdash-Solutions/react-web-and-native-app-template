@@ -1,4 +1,4 @@
-import type { Greeting, Message, User } from '@repo/domain';
+import type { Greeting, Message, User } from '@repo/core/domain';
 
 /**
  * 13.6 — Typed test-data builders. Built from the domain types, so a schema change that isn't

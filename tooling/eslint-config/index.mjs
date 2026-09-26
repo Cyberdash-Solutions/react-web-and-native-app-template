@@ -1,5 +1,5 @@
 // Shared flat ESLint config (13.27) including dependency-boundary rules
-// (1.4, 1.11, 1.13, 13.3). Every workspace calls `createConfig({ kind, ... })`.
+// (1.4, 1.13, 13.3) — including folder-level layering inside a package. Every workspace calls `createConfig({ kind, ... })`.
 import js from '@eslint/js';
 import reactHooks from 'eslint-plugin-react-hooks';
 import globals from 'globals';
@@ -49,7 +49,7 @@ const noPlatformModules = {
     '@react-native-*/*',
   ],
   message:
-    'Shared packages must stay platform-neutral (1.4). Put this in a *.native.ts / *.web.ts split file or a platform-scoped package.',
+    'Shared packages must stay platform-neutral (1.4). Put this in a *.native.ts / *.web.ts split file, or in the app that needs it.',
 };
 
 const DOM_GLOBALS = [
@@ -65,30 +65,32 @@ const DOM_GLOBALS = [
   message: `DOM global "${name}" is only allowed in *.web.ts files (1.4).`,
 }));
 
-/** 1.11 — platform-exclusive packages are only used by the matching app. */
-const platformExclusive = {
-  native: { group: ['@repo/web-pwa', '@repo/web-pwa/*'], message: 'web-only package (1.11).' },
-  web: {
-    group: ['@repo/native-push', '@repo/native-push/*'],
-    message: 'native-only package (1.11).',
-  },
+const noReact = {
+  group: ['react', 'react/*'],
+  message: 'Pure areas are framework-free (13.5). Put React bindings in a react.tsx file.',
 };
 
 /**
+ * @typedef {object} Area
+ * @property {boolean} [pure]       no React and no platform APIs (13.5)
+ * @property {string[]} [reactFiles] files inside a pure area that may use React (e.g. 'react.tsx')
+ * @property {string[]} [mayImport] other areas this one may import (1.4 layering); default none
+ */
+
+/**
  * @param {object} options
- * @param {'app' | 'package' | 'pure-package' | 'ui-package' | 'testing' | 'tooling'} options.kind
- *   pure-package: no React, no platform APIs (domain, utils, config)
- *   package:      React allowed; platform APIs only in *.native.ts / *.web.ts splits
- *   ui-package:   react-native primitives allowed (ui, via react-native-web) or a platform-scoped package
- * @param {'native' | 'web' | 'both'} [options.platform] — for apps: which platform they target.
+ * @param {'app' | 'package' | 'ui-package' | 'testing' | 'tooling'} options.kind
+ *   package:    shared code; platform APIs only in *.native.ts / *.web.ts splits (1.4)
+ *   ui-package: react-native primitives allowed (rendered on web by react-native-web)
+ * @param {Record<string, Area>} [options.areas] for `package`: folders under src/ and their rules.
+ *   Each area is a boundary like a package used to be: it may only import the areas it lists.
  * @param {string} options.tsconfigRootDir
  */
-export function createConfig({ kind, platform = 'both', tsconfigRootDir }) {
+export function createConfig({ kind, areas = {}, tsconfigRootDir }) {
   const sourcePatterns = [];
   if (kind !== 'testing') sourcePatterns.push(noTestingInSource);
   if (kind === 'app') {
     sourcePatterns.push(...noCrossAppImports);
-    if (platform !== 'both') sourcePatterns.push(platformExclusive[platform]);
   } else {
     sourcePatterns.push({
       group: ['**/apps/**', 'mobile', 'web'],
@@ -140,39 +142,47 @@ export function createConfig({ kind, platform = 'both', tsconfigRootDir }) {
     },
   ];
 
-  if (kind === 'pure-package' || kind === 'package') {
-    // 1.4: platform APIs only inside platform-split files.
-    configs.push({
-      files: ['**/*.{ts,tsx}'],
-      ignores: [...PLATFORM_SPLIT_FILES, ...TEST_FILES],
-      rules: {
-        'no-restricted-imports': ['error', { patterns: [...sourcePatterns, noPlatformModules] }],
-        'no-restricted-globals': ['error', ...DOM_GLOBALS],
-      },
-    });
-  }
+  if (kind === 'package') {
+    const names = Object.keys(areas);
+    for (const [name, area] of Object.entries(areas)) {
+      const allowed = new Set([name, ...(area.mayImport ?? [])]);
+      const layering = names
+        .filter((other) => !allowed.has(other))
+        .map((other) => ({
+          group: [`../${other}`, `../${other}/*`, `**/src/${other}`, `**/src/${other}/*`],
+          message: `src/${name} may not import src/${other}. Allowed: ${[...allowed].join(', ')} (1.4 layering).`,
+        }));
+      const files = [`src/${name}/**/*.{ts,tsx}`];
+      const reactFiles = (area.reactFiles ?? []).map((f) => `src/${name}/${f}`);
 
-  if (kind === 'pure-package') {
-    // 13.5: pure packages don't depend on React either.
-    configs.push({
-      files: ['**/*.{ts,tsx}'],
-      ignores: TEST_FILES,
-      rules: {
-        'no-restricted-imports': [
-          'error',
-          {
-            patterns: [
-              ...sourcePatterns,
-              noPlatformModules,
-              {
-                group: ['react', 'react/*'],
-                message: 'Pure packages are framework-free (13.5). Use a /react subpath export.',
-              },
-            ],
-          },
-        ],
-      },
-    });
+      // Platform-neutral source: no platform modules or DOM globals (1.4), no React if pure (13.5).
+      configs.push({
+        files,
+        ignores: [...PLATFORM_SPLIT_FILES, ...TEST_FILES, ...reactFiles],
+        rules: {
+          'no-restricted-imports': [
+            'error',
+            {
+              patterns: [
+                ...sourcePatterns,
+                ...layering,
+                noPlatformModules,
+                ...(area.pure ? [noReact] : []),
+              ],
+            },
+          ],
+          'no-restricted-globals': ['error', ...DOM_GLOBALS],
+        },
+      });
+      // Platform split files and a pure area's React binding: layering still applies.
+      configs.push({
+        files: [...PLATFORM_SPLIT_FILES.map((g) => `src/${name}/${g}`), ...reactFiles],
+        ignores: TEST_FILES,
+        rules: {
+          'no-restricted-imports': ['error', { patterns: [...sourcePatterns, ...layering] }],
+        },
+      });
+    }
   }
 
   // Test files may import @repo/testing and use node/jest globals.

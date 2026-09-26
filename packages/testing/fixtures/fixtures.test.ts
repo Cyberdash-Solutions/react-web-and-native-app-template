@@ -5,7 +5,7 @@ import {
   messageSchema,
   signInInputSchema,
   userSchema,
-} from '@repo/domain';
+} from '@repo/core/domain';
 
 import { buildGreeting, buildMessage, buildUser } from '../factories';
 import { fixtures } from './index';

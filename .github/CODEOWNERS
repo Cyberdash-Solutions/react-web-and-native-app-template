@@ -4,20 +4,22 @@
 /apps/mobile/              @your-org/mobile-team
 /apps/web/                 @your-org/web-team
 
-/packages/api-client/      @your-org/platform-team
-/packages/data/            @your-org/platform-team
-/packages/state/           @your-org/platform-team
-/packages/domain/          @your-org/domain-team
-/packages/auth/            @your-org/security-team
-/packages/ui/              @your-org/design-system-team
-/packages/i18n/            @your-org/design-system-team
-/packages/analytics/       @your-org/growth-team
-/packages/config/          @your-org/platform-team
-/packages/utils/           @your-org/platform-team
-/packages/testing/         @your-org/quality-team
-/packages/contracts/       @your-org/quality-team @your-org/domain-team
-/packages/native-push/     @your-org/mobile-team
-/packages/web-pwa/         @your-org/web-team
+# Shared code is one package; ownership is per folder.
+/packages/core/src/api-client/  @your-org/platform-team
+/packages/core/src/data/        @your-org/platform-team
+/packages/core/src/state/       @your-org/platform-team
+/packages/core/src/domain/      @your-org/domain-team
+/packages/core/src/auth/        @your-org/security-team
+/packages/core/src/i18n/        @your-org/design-system-team
+/packages/core/src/analytics/   @your-org/growth-team
+/packages/core/src/config/      @your-org/platform-team
+/packages/core/src/utils/       @your-org/platform-team
+/packages/ui/                   @your-org/design-system-team
+/packages/testing/              @your-org/quality-team
+/packages/testing/contracts/    @your-org/quality-team @your-org/domain-team
+/apps/mobile/src/push.ts        @your-org/mobile-team
+/apps/web/src/pwa.ts            @your-org/web-team
+/apps/web/public/sw.js          @your-org/web-team
 
 /tooling/                  @your-org/platform-team
 /.github/                  @your-org/platform-team

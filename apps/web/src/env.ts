@@ -1,4 +1,4 @@
-import { basePublicEnvSchema, createEnv } from '@repo/config';
+import { basePublicEnvSchema, createEnv } from '@repo/core/config';
 import { z } from 'zod';
 
 /**

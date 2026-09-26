@@ -1,8 +1,8 @@
-import { AnalyticsProvider } from '@repo/analytics';
-import { AuthProvider, AuthScopedDataProvider } from '@repo/auth';
-import { FeatureFlagProvider } from '@repo/config/react';
-import { applyDirection, I18nextProvider, useTranslation } from '@repo/i18n';
-import { PreferencesProvider, usePreferences } from '@repo/state';
+import { AnalyticsProvider } from '@repo/core/analytics';
+import { AuthProvider, AuthScopedDataProvider } from '@repo/core/auth';
+import { FeatureFlagProvider } from '@repo/core/config/react';
+import { applyDirection, I18nextProvider, useTranslation } from '@repo/core/i18n';
+import { PreferencesProvider, usePreferences } from '@repo/core/state';
 import { ErrorBoundary, ThemeProvider } from '@repo/ui';
 import { useEffect, type ReactNode } from 'react';
 

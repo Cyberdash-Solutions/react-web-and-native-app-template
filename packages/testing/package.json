@@ -11,29 +11,23 @@
     "./msw": "./mocks/handlers.ts",
     "./msw-node": "./mocks/node.ts",
     "./render": "./render/index.tsx",
-    "./render-web": "./render/web.tsx"
+    "./render-web": "./render/web.tsx",
+    "./mock-api": "./mock-api/server.mjs"
   },
   "scripts": {
     "lint": "eslint .",
     "typecheck": "tsc -p tsconfig.check.json",
-    "test": "jest --passWithNoTests"
+    "test": "jest"
   },
   "dependencies": {
-    "@repo/domain": "workspace:*",
     "@testing-library/react": "catalog:",
     "@testing-library/react-native": "catalog:",
     "msw": "catalog:"
   },
   "devDependencies": {
-    "@repo/analytics": "workspace:*",
-    "@repo/api-client": "workspace:*",
-    "@repo/auth": "workspace:*",
-    "@repo/config": "workspace:*",
-    "@repo/data": "workspace:*",
+    "@repo/core": "workspace:*",
     "@repo/eslint-config": "workspace:*",
-    "@repo/i18n": "workspace:*",
     "@repo/jest-config": "workspace:*",
-    "@repo/state": "workspace:*",
     "@repo/tsconfig": "workspace:*",
     "@repo/ui": "workspace:*",
     "@tanstack/react-query": "catalog:",
@@ -46,7 +40,8 @@
     "react-dom": "catalog:",
     "react-native": "catalog:",
     "react-test-renderer": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "zod": "catalog:"
   },
   "peerDependencies": {
     "react": "*",
@@ -57,5 +52,9 @@
     "react-dom": {
       "optional": true
     }
+  },
+  "description": "Dev-only test utilities (13.3): renderWithProviders, MSW mocks, the fake backend + mock API server, factories, fixtures, and API contract tests.",
+  "bin": {
+    "mock-api": "./mock-api/server.mjs"
   }
 }

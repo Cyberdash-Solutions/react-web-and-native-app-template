@@ -1,8 +1,8 @@
-import { useAnalytics, useConsent, useTrackScreen } from '@repo/analytics';
-import { useAuth, useAuthSession } from '@repo/auth';
-import { supportedLocales, useTranslation } from '@repo/i18n';
-import { usePreferences, type ColorSchemePreference } from '@repo/state';
-import { useInstallPrompt } from '@repo/web-pwa';
+import { useAnalytics, useConsent, useTrackScreen } from '@repo/core/analytics';
+import { useAuth, useAuthSession } from '@repo/core/auth';
+import { supportedLocales, useTranslation } from '@repo/core/i18n';
+import { usePreferences, type ColorSchemePreference } from '@repo/core/state';
+import { useInstallPrompt } from '../src/pwa';
 import { Button, Card, SegmentedControl, Screen, Text, ToggleRow } from '@repo/ui';
 import { Link, useRouter } from 'expo-router';
 import Head from 'expo-router/head';

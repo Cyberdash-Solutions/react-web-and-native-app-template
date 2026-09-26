@@ -1,6 +1,6 @@
-import { useAuth } from '@repo/auth';
-import { useTranslation } from '@repo/i18n';
-import { registerForPushNotifications, useNotificationRouting } from '@repo/native-push';
+import { useAuth } from '@repo/core/auth';
+import { useTranslation } from '@repo/core/i18n';
+import { registerForPushNotifications, useNotificationRouting } from '../src/push';
 import { useTheme } from '@repo/ui';
 import { Stack, useRouter, type Href } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';

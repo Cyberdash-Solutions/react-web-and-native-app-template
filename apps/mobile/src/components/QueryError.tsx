@@ -1,5 +1,5 @@
-import { normalizeError } from '@repo/domain';
-import { useTranslation } from '@repo/i18n';
+import { normalizeError } from '@repo/core/domain';
+import { useTranslation } from '@repo/core/i18n';
 import { a11y, Button, Stack, Text } from '@repo/ui';
 
 /** 5.1 — renders any error through its user-facing message key. */

@@ -2,7 +2,7 @@
 // 1.9 — Add or remove a deployment target later, without touching shared packages:
 //   pnpm gen add-target web
 //   pnpm gen remove-target mobile
-//   pnpm gen package <name> [--react]     scaffold a new shared package
+//   pnpm gen area <name>                   add a folder (and import path) to @repo/core
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -54,9 +54,8 @@ switch (command) {
     syncWorkspace({ install: !skipInstall });
     break;
   }
-  case 'package': {
-    scaffoldPackage(arg, flags.includes('--react'));
-    syncWorkspace({ install: !skipInstall });
+  case 'area': {
+    scaffoldArea(arg);
     break;
   }
   default:
@@ -66,81 +65,45 @@ switch (command) {
     process.exit(1);
 }
 
-function scaffoldPackage(name, react) {
+/**
+ * Shared code is one package (ADR 0008): a new concern is a folder in packages/core/src with its
+ * own subpath export, not a new workspace package.
+ */
+function scaffoldArea(name) {
   if (!name || !/^[a-z][a-z0-9-]*$/.test(name)) {
-    console.error('Package name must be kebab-case, e.g. `pnpm gen package payments`.');
+    console.error('Area name must be kebab-case, e.g. `pnpm gen area payments`.');
     process.exit(1);
   }
-  const dir = path.join(ROOT, 'packages', name);
+  const core = path.join(ROOT, 'packages/core');
+  const dir = path.join(core, 'src', name);
   if (fs.existsSync(dir)) {
-    console.error(`packages/${name} already exists.`);
+    console.error(`packages/core/src/${name} already exists.`);
     process.exit(1);
   }
-  const write = (rel, content) => {
-    fs.mkdirSync(path.dirname(path.join(dir, rel)), { recursive: true });
-    fs.writeFileSync(path.join(dir, rel), content);
-  };
-  const json = (o) => JSON.stringify(o, null, 2) + '\n';
-  write(
-    'package.json',
-    json({
-      name: `@repo/${name}`,
-      version: '0.0.0',
-      private: true,
-      sideEffects: false,
-      exports: { '.': './src/index.ts' },
-      scripts: { lint: 'eslint .', typecheck: 'tsc -p tsconfig.check.json', test: 'jest' },
-      ...(react ? { peerDependencies: { react: '*' } } : {}),
-      devDependencies: {
-        '@repo/eslint-config': 'workspace:*',
-        '@repo/jest-config': 'workspace:*',
-        '@repo/tsconfig': 'workspace:*',
-        '@types/jest': 'catalog:',
-        '@types/node': 'catalog:',
-        ...(react ? { '@types/react': 'catalog:', react: 'catalog:' } : {}),
-        eslint: 'catalog:',
-        jest: 'catalog:',
-        typescript: 'catalog:',
-      },
-    }),
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(
+    path.join(dir, 'index.ts'),
+    'export const hello = (name: string) => `Hello, ${name}!`;\n',
   );
-  write(
-    'tsconfig.json',
-    json({
-      extends: `@repo/tsconfig/${react ? 'react-library' : 'node'}.json`,
-      include: ['src'],
-      exclude: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
-    }),
+  fs.writeFileSync(
+    path.join(dir, 'index.test.ts'),
+    "import { hello } from './index';\n\ntest('hello', () => expect(hello('world')).toBe('Hello, world!'));\n",
   );
-  write(
-    'tsconfig.check.json',
-    json({
-      extends: './tsconfig.json',
-      compilerOptions: {
-        composite: false,
-        noEmit: true,
-        emitDeclarationOnly: false,
-        declaration: false,
-        declarationMap: false,
-        declarationDir: null,
-        tsBuildInfoFile: null,
-      },
-      include: ['src'],
-      exclude: [],
-    }),
+
+  const pkgFile = path.join(core, 'package.json');
+  const pkg = JSON.parse(fs.readFileSync(pkgFile, 'utf8'));
+  pkg.exports = Object.fromEntries(
+    Object.entries({ ...pkg.exports, [`./${name}`]: `./src/${name}/index.ts` }).sort(([a], [b]) =>
+      a.localeCompare(b),
+    ),
   );
-  write(
-    'eslint.config.mjs',
-    `import { createConfig } from '@repo/eslint-config';\n\nexport default createConfig({ kind: '${react ? 'package' : 'pure-package'}', tsconfigRootDir: import.meta.dirname });\n`,
+  fs.writeFileSync(pkgFile, JSON.stringify(pkg, null, 2) + '\n');
+
+  console.log(`Created packages/core/src/${name} → import from '@repo/core/${name}'.`);
+  console.log('Next:');
+  console.log(
+    `  - packages/core/eslint.config.mjs: add \`${name}: { mayImport: [...] }\` to areas (pure: true if it has no React)`,
   );
-  write(
-    'jest.config.js',
-    `module.exports = require('@repo/jest-config').${react ? 'universal' : 'node'}();\n`,
-  );
-  write('src/index.ts', `export const hello = (name: string) => \`Hello, \${name}!\`;\n`);
-  write(
-    'src/index.test.ts',
-    `import { hello } from './index';\n\ntest('hello', () => expect(hello('world')).toBe('Hello, world!'));\n`,
-  );
-  console.log(`Created packages/${name}. Add a CODEOWNERS entry for /packages/${name}/.`);
+  console.log(`  - packages/core/jest.config.js: add '${name}' to NODE_AREAS or PLATFORM_AREAS`);
+  console.log(`  - .github/CODEOWNERS: add /packages/core/src/${name}/`);
 }

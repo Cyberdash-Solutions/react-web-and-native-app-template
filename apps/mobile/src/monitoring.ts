@@ -1,5 +1,5 @@
 import * as Sentry from '@sentry/react-native';
-import type { LogTransport } from '@repo/utils';
+import type { LogTransport } from '@repo/core/utils';
 
 import { ENVIRONMENT, PLATFORM, RELEASE } from './app-info';
 import { env } from './env';

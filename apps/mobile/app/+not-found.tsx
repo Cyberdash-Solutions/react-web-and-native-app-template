@@ -1,4 +1,4 @@
-import { useTranslation } from '@repo/i18n';
+import { useTranslation } from '@repo/core/i18n';
 import { Card, Screen, Text } from '@repo/ui';
 import { Link } from 'expo-router';
 

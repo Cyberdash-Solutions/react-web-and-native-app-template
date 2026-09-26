@@ -1,5 +1,5 @@
-import { useAuth } from '@repo/auth';
-import { useTranslation } from '@repo/i18n';
+import { useAuth } from '@repo/core/auth';
+import { useTranslation } from '@repo/core/i18n';
 import { Text, useTheme } from '@repo/ui';
 import { Link } from 'expo-router';
 import { View } from 'react-native';

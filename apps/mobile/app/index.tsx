@@ -1,8 +1,8 @@
-import { useAnalytics, useTrackScreen } from '@repo/analytics';
-import { useAuth } from '@repo/auth';
-import { useFeatureFlag } from '@repo/config/react';
-import { useGreeting, useMessages } from '@repo/data';
-import { formatRelativeTime, useTranslation } from '@repo/i18n';
+import { useAnalytics, useTrackScreen } from '@repo/core/analytics';
+import { useAuth } from '@repo/core/auth';
+import { useFeatureFlag } from '@repo/core/config/react';
+import { useGreeting, useMessages } from '@repo/core/data';
+import { formatRelativeTime, useTranslation } from '@repo/core/i18n';
 import { a11y, Button, Card, Screen, Stack, Text, useReducedMotion, useTheme } from '@repo/ui';
 import { FlashList } from '@shopify/flash-list';
 import { Image } from 'expo-image';

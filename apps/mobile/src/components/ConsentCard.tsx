@@ -1,5 +1,5 @@
-import { useConsent } from '@repo/analytics';
-import { useTranslation } from '@repo/i18n';
+import { useConsent } from '@repo/core/analytics';
+import { useTranslation } from '@repo/core/i18n';
 import { Button, Card, Stack, Text } from '@repo/ui';
 
 import { requestTrackingIfNeeded } from '../tracking';

@@ -6,7 +6,7 @@
 
 ## Decision
 
-`packages/auth` owns one state machine (`unknown → signedOut | signedIn ⇄ refreshing`) and a
+`packages/core/src/auth` owns one state machine (`unknown → signedOut | signedIn ⇄ refreshing`) and a
 session object (sign-in, deduplicated refresh, expiry, sign-out). It never touches storage
 directly; it receives a `TokenStorage`:
 
@@ -23,6 +23,6 @@ and `session.getAccessToken()` refreshes proactively before expiry.
 ## Consequences
 
 - The web backend must be same-site with the web app (or use a BFF route on the web origin) for
-  the cookie to flow. `tooling/mock-api` implements the contract: `X-Client-Platform: web` →
+  the cookie to flow. `packages/testing/mock-api` implements the contract: `X-Client-Platform: web` →
   cookie instead of a body token. A Playwright test asserts the cookie is httpOnly and no token
   reaches localStorage.
