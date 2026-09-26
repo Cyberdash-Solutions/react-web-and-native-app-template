@@ -3,6 +3,7 @@ const path = require('node:path');
 const { node } = require('@repo/jest-config');
 
 module.exports = {
+  coverageReporters: ['text-summary', 'lcov', 'json-summary'],
   projects: [
     // 13.6 — fixtures and factories match the domain schemas.
     node(

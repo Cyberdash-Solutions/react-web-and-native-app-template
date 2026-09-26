@@ -34,6 +34,9 @@ jobs:
   checks:
     name: Typecheck · lint · unit · component · contract
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read # download main's coverage artifact for the 13.23 baseline
     steps:
       - uses: actions/checkout@v4
         with:
@@ -59,12 +62,24 @@ jobs:
           CONTRACT_API_URL: ${{ vars.CONTRACT_API_URL }}
       - name: Coverage must not drop on changed files (13.23)
         if: github.event_name == 'pull_request'
-        run: node tooling/scripts/check-changed-coverage.mjs --base ${{ github.event.pull_request.base.sha }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Baseline: the `coverage` artifact from the latest CI run on main (uploaded below).
+          RUN=$(gh run list --workflow ci.yml --branch main --event push --limit 1 --json databaseId -q '.[0].databaseId')
+          if [ -n "$RUN" ] && gh run download "$RUN" --name coverage --dir baseline-coverage; then
+            BASELINE="--baseline baseline-coverage"
+          else
+            echo "::warning::No coverage baseline from main; only new files are checked."
+          fi
+          node tooling/scripts/check-changed-coverage.mjs --base ${{ github.event.pull_request.base.sha }} $BASELINE
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: coverage
-          path: '**/coverage/coverage-summary.json'
+          path: |
+            **/coverage/coverage-summary.json
+            !baseline-coverage/**
           if-no-files-found: ignore
 
   # 1.14 — each app installs, builds and tests with only its own dependency graph, proving
