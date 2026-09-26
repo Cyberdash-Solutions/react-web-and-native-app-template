@@ -13,7 +13,7 @@
     "test": "jest",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "test:perf": "reassure",
+    "test:perf": "TEST_RUNNER_ARGS=\"--runInBand --selectProjects ios --testMatch '**/*.perf-test.tsx'\" reassure",
     "test:a11y": "playwright test"
   },
   "devDependencies": {

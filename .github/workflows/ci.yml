@@ -125,6 +125,10 @@ jobs:
   perf:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    env:
+      # One platform project: the ui Jest config runs every test on ios, android and web, which
+      # would record each perf test three times under the same name.
+      TEST_RUNNER_ARGS: --runInBand --selectProjects ios --testMatch '**/*.perf-test.tsx'
     steps:
       - uses: actions/checkout@v4
         with:

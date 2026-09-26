@@ -93,11 +93,13 @@ function platformProject(platform, extraSetup = []) {
     displayName: platform,
     // 13.7 — component tests (*.test.tsx) use React Native Testing Library and run on the native
     // projects; the web project runs logic tests (*.test.ts) and React Testing Library tests for
-    // web-only components (*.web.test.tsx).
+    // web-only components (*.web.test.tsx). Tests of a *.native.ts split (*.native.test.ts) run
+    // only on the native projects.
     ...(platform === 'web'
       ? {
           testEnvironment: path.join(__dirname, 'env-web.js'),
           testMatch: ['**/?(*.)test.[jt]s', '**/*.web.test.[jt]sx'],
+          testPathIgnorePatterns: [...common.testPathIgnorePatterns, '\\.native\\.test\\.[jt]sx?$'],
         }
       : { testPathIgnorePatterns: [...common.testPathIgnorePatterns, '\\.web\\.test\\.[jt]sx?$'] }),
     transformIgnorePatterns,
