@@ -35,6 +35,12 @@ lives in this template.
 | 1.17 | Per-app release identity                      | `pnpm release <app> <bump>` → tag `<app>@x.y.z`, `CHANGELOG.md`, Sentry release `<app>@x.y.z`                 | ✅      |
 | 1.18 | Per-app environments and secrets              | GitHub environments `web-*` / `mobile-*` in workflows; per-app `.env.example`                                 | 🔌      |
 
+**1.11 caveat:** an app's own dependency tree carries no modules for the other platform, and
+`create-app` / `remove-target` delete the other platform's scoped package. Shared packages keep
+their platform adapters as _optional peers_, dev-installed only so their `.native.ts` / `.web.ts`
+splits can be tested — e.g. a web-only repo still dev-installs `react-native-mmkv` for
+`packages/state`. None of it reaches the web bundle.
+
 ## 2. Architecture and code organization
 
 | #   | Item                                    | Where                                                                             | Status |
