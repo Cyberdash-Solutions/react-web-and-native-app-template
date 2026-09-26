@@ -1,0 +1,77 @@
+[
+  {
+    "id": "m_1",
+    "text": "Message #1",
+    "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "m_2",
+    "text": "Message #2",
+    "createdAt": "2026-01-01T00:01:00.000Z"
+  },
+  {
+    "id": "m_3",
+    "text": "Message #3",
+    "createdAt": "2026-01-01T00:02:00.000Z"
+  },
+  {
+    "id": "m_4",
+    "text": "Message #4",
+    "createdAt": "2026-01-01T00:03:00.000Z"
+  },
+  {
+    "id": "m_5",
+    "text": "Message #5",
+    "createdAt": "2026-01-01T00:04:00.000Z"
+  },
+  {
+    "id": "m_6",
+    "text": "Message #6",
+    "createdAt": "2026-01-01T00:05:00.000Z"
+  },
+  {
+    "id": "m_7",
+    "text": "Message #7",
+    "createdAt": "2026-01-01T00:06:00.000Z"
+  },
+  {
+    "id": "m_8",
+    "text": "Message #8",
+    "createdAt": "2026-01-01T00:07:00.000Z"
+  },
+  {
+    "id": "m_9",
+    "text": "Message #9",
+    "createdAt": "2026-01-01T00:08:00.000Z"
+  },
+  {
+    "id": "m_10",
+    "text": "Message #10",
+    "createdAt": "2026-01-01T00:09:00.000Z"
+  },
+  {
+    "id": "m_11",
+    "text": "Message #11",
+    "createdAt": "2026-01-01T00:10:00.000Z"
+  },
+  {
+    "id": "m_12",
+    "text": "Message #12",
+    "createdAt": "2026-01-01T00:11:00.000Z"
+  },
+  {
+    "id": "m_13",
+    "text": "Message #13",
+    "createdAt": "2026-01-01T00:12:00.000Z"
+  },
+  {
+    "id": "m_14",
+    "text": "Message #14",
+    "createdAt": "2026-01-01T00:13:00.000Z"
+  },
+  {
+    "id": "m_15",
+    "text": "Message #15",
+    "createdAt": "2026-01-01T00:14:00.000Z"
+  }
+]

@@ -1,0 +1,16 @@
+# Shared sign-in subflow (mirrors the Playwright `signIn` fixture on web).
+# Credentials come from packages/testing/fixtures/credentials.json via env.
+appId: ${APP_ID}
+---
+- tapOn: 'Sign in'
+- tapOn: 'Email'
+- inputText: ${EMAIL}
+- tapOn: 'Password'
+- inputText: ${PASSWORD}
+- hideKeyboard
+- tapOn:
+    text: 'Sign in'
+    index: 1
+- extendedWaitUntil:
+    visible: 'Hello, ${USER_NAME}!'
+    timeout: 15000

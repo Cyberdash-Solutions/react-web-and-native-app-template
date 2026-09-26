@@ -1,0 +1,15 @@
+appId: com.example.helloworld.test
+name: Hello world (anonymous)
+tags: [smoke]
+env:
+  APP_ID: com.example.helloworld.test
+  API_URL: http://localhost:4000
+---
+- runFlow: ../../../tooling/maestro/subflows/launch.yaml
+- assertVisible: 'Hello, world!'
+- runFlow:
+    file: ../../../tooling/maestro/subflows/consent.yaml
+    env:
+      ANSWER: Decline
+- assertNotVisible: 'We value your privacy'
+- assertVisible: 'Sign in'

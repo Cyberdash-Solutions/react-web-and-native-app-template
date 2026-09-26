@@ -1,0 +1,22 @@
+name: Setup
+description: Node + pnpm + install (with the Turborepo remote cache wired through env, 12.2)
+inputs:
+  filter:
+    description: Optional pnpm filter, e.g. "web..." to install only one app's dependency graph (1.14)
+    required: false
+    default: ''
+runs:
+  using: composite
+  steps:
+    - uses: pnpm/action-setup@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version-file: .nvmrc
+        cache: pnpm
+    - shell: bash
+      run: |
+        if [ -n "${{ inputs.filter }}" ]; then
+          pnpm install --frozen-lockfile --filter "${{ inputs.filter }}"
+        else
+          pnpm install --frozen-lockfile
+        fi

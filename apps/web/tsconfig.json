@@ -1,0 +1,13 @@
+{
+  "extends": "@repo/tsconfig/expo-app.json",
+  "compilerOptions": {
+    "composite": false,
+    "noEmit": true,
+    "emitDeclarationOnly": false,
+    "declaration": false,
+    "declarationMap": false,
+    "declarationDir": null,
+    "tsBuildInfoFile": null
+  },
+  "include": ["app", "src", "__tests__", "e2e", "*.ts", "expo-env.d.ts", ".expo/types/**/*.ts"]
+}

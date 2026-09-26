@@ -1,0 +1,15 @@
+{
+  "extends": "@repo/tsconfig/base.json",
+  "compilerOptions": {
+    "composite": false,
+    "noEmit": true,
+    "emitDeclarationOnly": false,
+    "declaration": false,
+    "declarationMap": false,
+    "declarationDir": null,
+    "tsBuildInfoFile": null,
+    "module": "ESNext",
+    "types": ["node"]
+  },
+  "include": ["*.ts"]
+}

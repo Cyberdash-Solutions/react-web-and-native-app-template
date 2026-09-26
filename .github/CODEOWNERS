@@ -1,0 +1,24 @@
+# 1.7 — owners per app and per package. Replace the placeholder teams with real ones.
+*                          @your-org/platform-team
+
+/apps/mobile/              @your-org/mobile-team
+/apps/web/                 @your-org/web-team
+
+/packages/api-client/      @your-org/platform-team
+/packages/data/            @your-org/platform-team
+/packages/state/           @your-org/platform-team
+/packages/domain/          @your-org/domain-team
+/packages/auth/            @your-org/security-team
+/packages/ui/              @your-org/design-system-team
+/packages/i18n/            @your-org/design-system-team
+/packages/analytics/       @your-org/growth-team
+/packages/config/          @your-org/platform-team
+/packages/utils/           @your-org/platform-team
+/packages/testing/         @your-org/quality-team
+/packages/contracts/       @your-org/quality-team @your-org/domain-team
+/packages/native-push/     @your-org/mobile-team
+/packages/web-pwa/         @your-org/web-team
+
+/tooling/                  @your-org/platform-team
+/.github/                  @your-org/platform-team
+/docs/adr/                 @your-org/platform-team

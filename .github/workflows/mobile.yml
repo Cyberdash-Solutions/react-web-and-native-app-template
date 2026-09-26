@@ -1,0 +1,167 @@
+# The mobile app's own pipeline (1.15). Unit/component tests run in ci.yml on every PR; this
+# workflow owns EAS builds, OTA updates, device E2E and store submission, and never blocks web.
+name: Mobile
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+    tags: ['mobile@*']
+  workflow_dispatch:
+    inputs:
+      action:
+        description: What to ship
+        type: choice
+        options: [update-preview, build-preview, release]
+        default: update-preview
+
+concurrency:
+  group: mobile-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+  TURBO_TELEMETRY_DISABLED: 1
+  # 1.18 — mobile-only secrets (GitHub environments "mobile-preview" / "mobile-production").
+  EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+  EAS_PROJECT_ID: ${{ vars.EAS_PROJECT_ID }}
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      mobile: ${{ steps.affected.outputs.mobile }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - id: affected
+        run: |
+          BASE=${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || 'HEAD^' }}
+          if npx -y turbo-ignore mobile --fallback="$BASE"; then echo "mobile=false" >> "$GITHUB_OUTPUT"; else echo "mobile=true" >> "$GITHUB_OUTPUT"; fi
+
+  # Fast PR signal: the JS bundles for both platforms compile and expo-doctor is happy.
+  verify:
+    needs: changes
+    if: needs.changes.outputs.mobile == 'true' || github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+        with:
+          filter: 'mobile...'
+      - run: pnpm --filter mobile exec expo config --type public > /dev/null
+      - run: pnpm turbo run build --filter=mobile
+
+  # 12.3 — merges to main publish an OTA update to the preview channel (runtime-version pinned).
+  ota-preview:
+    needs: verify
+    # EAS jobs need an Expo account: set the repo variable EAS_ENABLED=true once EXPO_TOKEN exists.
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && vars.EAS_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    environment: mobile-preview
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+        with:
+          filter: 'mobile...'
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+      - working-directory: apps/mobile
+        run: eas update --channel preview --message "${{ github.event.head_commit.message }}" --non-interactive
+        env:
+          EXPO_PUBLIC_APP_ENV: staging
+          EXPO_PUBLIC_API_URL: ${{ vars.MOBILE_API_URL }}
+          EXPO_PUBLIC_SENTRY_DSN: ${{ vars.MOBILE_SENTRY_DSN }}
+
+  # 13.15 / 13.25 / 13.26 — Maestro on merge to main and before store submission, across the
+  # device matrix: min + latest supported iOS and Android, plus one small screen.
+  e2e:
+    needs: verify
+    if: (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/mobile@')) && github.event_name == 'push' && vars.EAS_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { platform: ios, device: 'iPhone 11', os: 'iOS-16-4' } # minimum supported
+          - { platform: ios, device: 'iPhone 16 Pro', os: 'iOS-18-2' } # latest
+          - { platform: ios, device: 'iPhone SE (3rd generation)', os: 'iOS-18-2' } # small screen
+          - { platform: android, device: 'pixel_6', os: 'android-29' } # minimum supported
+          - { platform: android, device: 'pixel_8', os: 'android-35' } # latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+        with:
+          filter: 'mobile...'
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+      - name: EAS build (e2e profile)
+        working-directory: apps/mobile
+        run: |
+          eas build --profile e2e --platform ${{ matrix.platform }} --non-interactive --wait --json > build.json
+          URL=$(jq -r '.[0].artifacts.buildUrl' build.json)
+          if [ "${{ matrix.platform }}" = "ios" ]; then
+            curl -sL "$URL" -o build.tar.gz && mkdir -p build.app && tar -xzf build.tar.gz -C build.app --strip-components=1
+          else
+            curl -sL "$URL" -o build.apk
+          fi
+      - name: Maestro Cloud
+        uses: mobile-dev-inc/action-maestro-cloud@v1
+        with:
+          api-key: ${{ secrets.MAESTRO_CLOUD_API_KEY }}
+          app-file: ${{ matrix.platform == 'ios' && 'apps/mobile/build.app' || 'apps/mobile/build.apk' }}
+          workspace: apps/mobile/e2e
+          device-model: ${{ matrix.device }}
+          device-os: ${{ matrix.os }}
+          env: |
+            API_URL=${{ vars.E2E_API_URL }}
+
+  # 13.21 / 6.5 — Flashlight: startup time and frame drops on a real Android build.
+  flashlight:
+    needs: e2e
+    if: github.ref == 'refs/heads/main' && vars.EAS_ENABLED == 'true' && vars.FLASHLIGHT_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+      - name: Download the latest Android e2e build
+        working-directory: apps/mobile
+        run: curl -sL "$(eas build:list --profile e2e --platform android --status finished --limit 1 --json --non-interactive | jq -r '.[0].artifacts.buildUrl')" -o build.apk
+      - run: curl https://get.flashlight.dev | bash
+      - run: |
+          $HOME/.flashlight/bin/flashlight cloud --app apps/mobile/build.apk \
+            --test apps/mobile/e2e/hello-world.yaml --duration 10000 \
+            --apiKey ${{ secrets.FLASHLIGHT_API_KEY }}
+
+  # 1.16 / 12.3 — store release: tag mobile@x.y.z (pnpm release mobile) → build + submit.
+  # Phased rollout / halting is the rollback path (1.17), alongside `eas update:rollback`.
+  release:
+    needs: e2e
+    if: vars.EAS_ENABLED == 'true' && (startsWith(github.ref, 'refs/tags/mobile@') || (github.event_name == 'workflow_dispatch' && inputs.action == 'release'))
+    runs-on: ubuntu-latest
+    environment: mobile-production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+        with:
+          filter: 'mobile...'
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+      - working-directory: apps/mobile
+        run: eas build --profile production --platform all --non-interactive --auto-submit
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.MOBILE_SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ vars.MOBILE_SENTRY_PROJECT }}

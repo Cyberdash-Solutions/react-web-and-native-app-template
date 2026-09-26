@@ -1,0 +1,42 @@
+{
+  "name": "react-web-and-native-app-template",
+  "private": true,
+  "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "test:affected": "turbo run test --affected",
+    "lint": "turbo run lint",
+    "typecheck": "node tooling/scripts/sync-ts-references.mjs --check && tsc -b && turbo run typecheck",
+    "check": "turbo run typecheck lint test",
+    "e2e:web": "turbo run e2e --filter=web",
+    "contracts": "pnpm --filter @repo/contracts test",
+    "mock-api": "node tooling/mock-api/server.mjs",
+    "create-app": "node tooling/generators/create-app.mjs",
+    "gen": "node tooling/generators/gen.mjs",
+    "release": "node tooling/scripts/release.mjs",
+    "apps:list": "node tooling/scripts/list-apps.mjs",
+    "i18n:check": "pnpm --filter @repo/i18n check",
+    "deps:check": "syncpack lint",
+    "deps:fix": "syncpack fix",
+    "graph": "turbo run build --graph=dependency-graph.html",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "ts:refs": "node tooling/scripts/sync-ts-references.mjs"
+  },
+  "devDependencies": {
+    "@repo/eslint-config": "workspace:*",
+    "@repo/tsconfig": "workspace:*",
+    "prettier": "catalog:",
+    "syncpack": "catalog:",
+    "turbo": "catalog:",
+    "typescript": "catalog:"
+  },
+  "template": {
+    "repository": "https://github.com/cyberdash-solutions/react-web-and-native-app-template"
+  }
+}
