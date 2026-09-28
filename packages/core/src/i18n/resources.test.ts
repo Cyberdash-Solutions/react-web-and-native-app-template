@@ -1,5 +1,5 @@
 import { createI18n } from './instance';
-import { isRTL, resolveLocale } from './resources';
+import { isRTL, languageName, resolveLocale, supportedLocales } from './resources';
 
 describe('i18n resources', () => {
   it('interpolates and pluralizes', () => {
@@ -13,6 +13,11 @@ describe('i18n resources', () => {
   it('resolves locales with language fallback', () => {
     expect(resolveLocale(['es-MX'])).toBe('es');
     expect(resolveLocale([null, 'fr-FR'])).toBe('en');
+  });
+  it('names every language in that language, without Intl.DisplayNames (Hermes lacks it)', () => {
+    expect(languageName('en')).toBe('English');
+    expect(languageName('es')).toBe('Español');
+    for (const l of supportedLocales) expect(languageName(l)).toBeTruthy();
   });
   it('knows RTL languages', () => {
     expect(isRTL('ar-EG')).toBe(true);

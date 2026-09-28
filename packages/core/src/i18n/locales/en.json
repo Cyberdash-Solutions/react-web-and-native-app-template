@@ -43,6 +43,7 @@
     "theme_dark": "Dark",
     "language": "Language",
     "language_system": "Device default",
+    "languageName": "English",
     "analytics": "Share anonymous usage analytics"
   },
   "consent": {

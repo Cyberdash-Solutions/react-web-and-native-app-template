@@ -4,6 +4,7 @@ import { renderWithProviders, screen, userEvent, waitFor } from '@repo/testing/r
 import type * as React from 'react';
 
 import HomeScreen from '../app/index';
+import SettingsScreen from '../app/settings';
 import SignInScreen from '../app/sign-in';
 import SignUpScreen from '../app/sign-up';
 
@@ -101,5 +102,25 @@ describe('SignUpScreen', () => {
     renderWithProviders(<SignUpScreen />);
     await userEvent.press(screen.getByRole('button', { name: 'Sign in' }));
     expect(mockReplace).toHaveBeenCalledWith('/sign-in');
+  });
+});
+
+describe('SettingsScreen', () => {
+  // Hermes on Android has no Intl.DisplayNames; Node does, so remove it to match the device.
+  const original = Object.getOwnPropertyDescriptor(Intl, 'DisplayNames')!;
+  beforeEach(() => Reflect.deleteProperty(Intl, 'DisplayNames'));
+  afterEach(() => Object.defineProperty(Intl, 'DisplayNames', original));
+
+  it('renders the language picker without Intl.DisplayNames', async () => {
+    renderWithProviders(<SettingsScreen />, { analyticsConsent: false });
+    expect(await screen.findByRole('radio', { name: 'English' })).toBeOnTheScreen();
+    expect(screen.getByRole('radio', { name: 'Español' })).toBeOnTheScreen();
+  });
+
+  it('selects a language', async () => {
+    renderWithProviders(<SettingsScreen />, { analyticsConsent: false });
+    await userEvent.press(await screen.findByRole('radio', { name: 'Español' }));
+    expect(screen.getByRole('radio', { name: 'Español' })).toBeChecked();
+    expect(screen.getByRole('radio', { name: 'English' })).not.toBeChecked();
   });
 });

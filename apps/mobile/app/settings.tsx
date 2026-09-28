@@ -1,6 +1,6 @@
 import { useAnalytics, useConsent, useTrackScreen } from '@repo/core/analytics';
 import { biometricsSupported, useAuth, useAuthSession } from '@repo/core/auth';
-import { supportedLocales, useTranslation } from '@repo/core/i18n';
+import { languageName, supportedLocales, useTranslation } from '@repo/core/i18n';
 import { usePreferences, type ColorSchemePreference } from '@repo/core/state';
 import { Button, Card, SegmentedControl, Screen, Text, ToggleRow } from '@repo/ui';
 import { Link, useRouter } from 'expo-router';
@@ -56,7 +56,7 @@ export default function SettingsScreen() {
             { value: 'system', label: t('settings:language_system') },
             ...supportedLocales.map((l) => ({
               value: l,
-              label: new Intl.DisplayNames([l], { type: 'language' }).of(l) ?? l,
+              label: languageName(l),
             })),
           ]}
         />

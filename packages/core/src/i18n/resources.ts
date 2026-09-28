@@ -12,6 +12,12 @@ export const supportedLocales = Object.keys(resources) as Locale[];
 export const defaultLocale: Locale = 'en';
 export const namespaces = Object.keys(en) as (keyof typeof en)[];
 
+/**
+ * A language's name in that language ("English", "Español"), for language pickers. It comes from
+ * the locale's own resources rather than Intl.DisplayNames, which Hermes on Android lacks.
+ */
+export const languageName = (locale: Locale) => resources[locale].settings.languageName;
+
 const RTL_LANGUAGES = new Set(['ar', 'fa', 'he', 'ur']);
 /** 10.3 — shared RTL decision; applying it differs per platform (I18nManager vs `dir`). */
 export const isRTL = (locale: string) => RTL_LANGUAGES.has(locale.split('-')[0]!.toLowerCase());

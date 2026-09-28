@@ -1,6 +1,6 @@
 import { useAnalytics, useConsent, useTrackScreen } from '@repo/core/analytics';
 import { useAuth, useAuthSession } from '@repo/core/auth';
-import { supportedLocales, useTranslation } from '@repo/core/i18n';
+import { languageName, supportedLocales, useTranslation } from '@repo/core/i18n';
 import { usePreferences, type ColorSchemePreference } from '@repo/core/state';
 import { useInstallPrompt } from '../src/pwa';
 import { Button, Card, SegmentedControl, Screen, Text, ToggleRow } from '@repo/ui';
@@ -64,7 +64,7 @@ export default function SettingsScreen() {
             { value: 'system', label: t('settings:language_system') },
             ...supportedLocales.map((l) => ({
               value: l,
-              label: new Intl.DisplayNames([l], { type: 'language' }).of(l) ?? l,
+              label: languageName(l),
             })),
           ]}
         />
