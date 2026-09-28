@@ -6,6 +6,7 @@ import type * as React from 'react';
 
 import HomeScreen from '../app/index';
 import SignInScreen from '../app/sign-in';
+import SignUpScreen from '../app/sign-up';
 
 // 13.10 — screen-level integration tests: real providers, real api-client, MSW backend.
 // Navigation is the one thing mocked; E2E (Playwright) covers real routing.
@@ -85,5 +86,48 @@ describe('SignInScreen', () => {
     await user.click(screen.getByRole('button', { name: 'Sign in' }));
     expect(await screen.findByText('Enter a valid email address.')).toBeTruthy();
     expect(screen.getByText('Password must be at least 8 characters.')).toBeTruthy();
+  });
+});
+
+describe('SignUpScreen', () => {
+  it('creates an account, signs in and tracks the event', async () => {
+    const user = userEvent.setup();
+    const { session, analyticsEvents } = renderWithProviders(<SignUpScreen />, {
+      analyticsConsent: true,
+    });
+    await user.type(screen.getByLabelText('Name'), 'Grace Hopper');
+    await user.type(screen.getByLabelText('Email'), 'grace@example.com');
+    await user.type(screen.getByLabelText('Password'), 'cobol-1959');
+    await user.click(screen.getByRole('button', { name: 'Create account' }));
+    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/'));
+    expect(session.getState()).toMatchObject({
+      status: 'signedIn',
+      user: { name: 'Grace Hopper', email: 'grace@example.com' },
+    });
+    expect(analyticsEvents).toContainEqual({
+      name: 'signed_up',
+      properties: { method: 'password' },
+    });
+  });
+
+  it('shows field errors from the shared schema', async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<SignUpScreen />);
+    await user.click(screen.getByRole('button', { name: 'Create account' }));
+    expect(await screen.findByText('Name is required.')).toBeTruthy();
+    expect(screen.getByText('Enter a valid email address.')).toBeTruthy();
+    expect(screen.getByText('Password must be at least 8 characters.')).toBeTruthy();
+  });
+
+  it('explains when the email already has an account', async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<SignUpScreen />);
+    await user.type(screen.getByLabelText('Name'), 'Another Ada');
+    await user.type(screen.getByLabelText('Email'), fixtures.credentials.email);
+    await user.type(screen.getByLabelText('Password'), 'cobol-1959');
+    await user.click(screen.getByRole('button', { name: 'Create account' }));
+    expect((await screen.findByRole('alert')).textContent).toBe(
+      'An account with this email already exists. Sign in instead.',
+    );
   });
 });

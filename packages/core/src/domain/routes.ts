@@ -6,6 +6,7 @@
 export const routes = {
   home: { path: '/' },
   signIn: { path: '/sign-in' },
+  signUp: { path: '/sign-up' },
   settings: { path: '/settings' },
   profile: { path: '/profile' },
   message: { path: '/messages/:id' },

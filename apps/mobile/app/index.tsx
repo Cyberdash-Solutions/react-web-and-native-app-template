@@ -81,9 +81,14 @@ export default function HomeScreen() {
           </Animated.View>
         )}
         {!signedIn && auth.status !== 'unknown' ? (
-          <Link href={href('signIn')} asChild>
-            <Button title={t('signIn')} />
-          </Link>
+          <>
+            <Link href={href('signIn')} asChild>
+              <Button title={t('signIn')} />
+            </Link>
+            <Link href={href('signUp')} asChild>
+              <Button title={t('signUp')} variant="secondary" />
+            </Link>
+          </>
         ) : null}
         {signedIn ? (
           <Link href={href('profile')} asChild>

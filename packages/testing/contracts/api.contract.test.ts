@@ -76,6 +76,27 @@ describe('current client contract', () => {
     expect(res.body.refreshToken).toBeUndefined();
     expect(res.headers.get('set-cookie')).toMatch(/HttpOnly/);
   });
+  it('POST /auth/register creates an account and signs it in', async () => {
+    const res = await call('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({
+        name: 'Contract Tester',
+        email: `contract-${Date.now()}@example.com`,
+        password: 'contract-password',
+      }),
+    });
+    expect(res.status).toBe(201);
+    expectShape(signInResponseSchema, res.body);
+    const me = await call('/me', { headers: { Authorization: `Bearer ${res.body.accessToken}` } });
+    expect(me.body).toMatchObject({ name: 'Contract Tester' });
+  });
+  it('POST /auth/register rejects an email that already has an account with 409', async () => {
+    const res = await call('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({ ...fixtures.credentials, name: 'Another Ada' }),
+    });
+    expect(res.status).toBe(409);
+  });
   it('rejects unauthenticated access with 401', async () =>
     expect((await call('/me')).status).toBe(401));
 });

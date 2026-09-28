@@ -32,6 +32,12 @@ export const signInInputSchema = z.object({
 });
 export type SignInInput = z.infer<typeof signInInputSchema>;
 
+/** Creating an account: a profile name plus the same email / password rules as sign-in. */
+export const signUpInputSchema = signInInputSchema.extend({
+  name: updateProfileInputSchema.shape.name,
+});
+export type SignUpInput = z.infer<typeof signUpInputSchema>;
+
 export const authTokensSchema = z.object({
   accessToken: z.string(),
   /** Absent for web clients: the BFF keeps the refresh token in an httpOnly cookie (4.2). */

@@ -1,0 +1,34 @@
+appId: com.example.helloworld.test
+name: Create an account, sign out, sign back in (13.17)
+tags: [critical]
+env:
+  APP_ID: com.example.helloworld.test
+  API_URL: http://localhost:4000
+  EMAIL: grace@example.com
+  PASSWORD: cobol-1959
+  USER_NAME: Grace Hopper
+---
+- runFlow: ../../../tooling/maestro/subflows/launch.yaml
+- runFlow: ../../../tooling/maestro/subflows/consent.yaml
+- tapOn: 'Create account'
+- tapOn: 'Name'
+- inputText: ${USER_NAME}
+- tapOn: 'Email'
+- inputText: ${EMAIL}
+- tapOn: 'Password'
+- inputText: ${PASSWORD}
+- hideKeyboard
+- tapOn:
+    text: 'Create account'
+    index: 1
+- extendedWaitUntil:
+    visible: 'Hello, ${USER_NAME}!'
+    timeout: 15000
+- assertVisible: '0 messages'
+# Sign out, then sign back in with the new account through the shared subflow.
+- tapOn: 'Settings'
+- scrollUntilVisible:
+    element: 'Sign out'
+- tapOn: 'Sign out'
+- assertVisible: 'Hello, world!'
+- runFlow: ../../../tooling/maestro/subflows/login.yaml

@@ -21,6 +21,7 @@ implements it. **[ADRs](docs/adr)** record what is shared and what stays per pla
 | ---------- | ------------------------------------------- | ----------------------------------------- |
 | Signed out | "Hello, world!" from the API                | same, plus an analytics consent card      |
 | Sign in    | `ada@example.com` / `correct-horse-battery` | same (modal, screenshot-protected)        |
+| Sign up    | name, email, password → signed straight in  | same (modal, screenshot-protected)        |
 | Signed in  | "Hello, Ada Lovelace!" + paginated messages | same, in a FlashList with pull-to-refresh |
 | Profile    | rename yourself (optimistic update)         | same                                      |
 | Settings   | theme, language, analytics consent          | + biometric lock                          |

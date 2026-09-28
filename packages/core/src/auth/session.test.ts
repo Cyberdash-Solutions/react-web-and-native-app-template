@@ -48,6 +48,27 @@ describe('auth session', () => {
     });
   });
 
+  it('signs up, signs straight in and can restore the new account', async () => {
+    const input = { name: 'Grace Hopper', email: 'grace@example.com', password: 'cobol-1959' };
+    const { session, storage, api } = setup();
+    const user = await session.signUp(input);
+    expect(user).toMatchObject({ name: input.name, email: input.email });
+    expect(session.getState()).toMatchObject({ status: 'signedIn', user });
+    await expect(api.getGreeting()).resolves.toMatchObject({ message: 'Hello, Grace Hopper!' });
+
+    const restored = setup(storage.peek()).session;
+    await expect(restored.restore()).resolves.toBe(true);
+    expect(restored.getState()).toMatchObject({ status: 'signedIn', user });
+  });
+
+  it('rejects signing up with an email that already has an account', async () => {
+    const { session } = setup();
+    await expect(
+      session.signUp({ ...fixtures.credentials, name: 'Another Ada' }),
+    ).rejects.toMatchObject({ code: 'conflict' });
+    expect(session.getState().status).toBe('unknown');
+  });
+
   it('refreshes an expired access token transparently', async () => {
     let t = 0;
     const { session, api } = setup(null, () => t);

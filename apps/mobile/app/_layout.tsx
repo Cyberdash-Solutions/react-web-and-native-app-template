@@ -69,6 +69,7 @@ function Navigator() {
       >
         <Stack.Screen name="index" options={{ title: t('appName') }} />
         <Stack.Screen name="sign-in" options={{ title: t('signIn'), presentation: 'modal' }} />
+        <Stack.Screen name="sign-up" options={{ title: t('signUp'), presentation: 'modal' }} />
         <Stack.Screen name="settings" options={{ title: t('settings') }} />
         <Stack.Screen name="profile" options={{ title: t('profile') }} />
         <Stack.Screen name="privacy" options={{ title: t('privacy') }} />

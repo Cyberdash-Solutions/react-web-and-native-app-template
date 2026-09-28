@@ -6,6 +6,7 @@ export interface AnalyticsEvents {
   app_opened: { coldStart: boolean };
   screen_viewed: { screen: string };
   signed_in: { method: 'password' | 'oauth' };
+  signed_up: { method: 'password' };
   signed_out: { reason: 'user' | 'expired' | 'deleted' };
   greeting_viewed: { variant: 'classic' | 'enthusiastic'; authenticated: boolean };
   profile_updated: Record<string, never>;

@@ -8,6 +8,7 @@ import {
   authTokensSchema,
   userSchema,
   type SignInInput,
+  type SignUpInput,
   type UpdateProfileInput,
 } from '../domain';
 
@@ -30,6 +31,9 @@ export function createEndpoints(client: ApiClient) {
     deleteMe: () => client.delete('/me'),
     signIn: (input: SignInInput) =>
       client.post('/auth/login', input, { schema: signInResponseSchema, anonymous: true }),
+    /** Creates the account and signs it in: same response as sign-in (201). */
+    signUp: (input: SignUpInput) =>
+      client.post('/auth/register', input, { schema: signInResponseSchema, anonymous: true }),
     refresh: (refreshToken?: string) =>
       client.post('/auth/refresh', refreshToken ? { refreshToken } : {}, {
         schema: authTokensSchema,

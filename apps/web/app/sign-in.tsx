@@ -2,8 +2,8 @@ import { useAnalytics, useTrackScreen } from '@repo/core/analytics';
 import { useAuthSession } from '@repo/core/auth';
 import { normalizeError, signInInputSchema } from '@repo/core/domain';
 import { useTranslation } from '@repo/core/i18n';
-import { a11y, Button, Card, Screen, Stack, Text, TextField } from '@repo/ui';
-import { useRouter } from 'expo-router';
+import { a11y, Button, Card, Screen, Stack, Text, TextField, useTheme } from '@repo/ui';
+import { Link, useRouter } from 'expo-router';
 import Head from 'expo-router/head';
 import { useState } from 'react';
 
@@ -11,6 +11,7 @@ import { href } from '../src/routes';
 
 export default function SignInScreen() {
   const { t } = useTranslation();
+  const { colors } = useTheme();
   const session = useAuthSession();
   const analytics = useAnalytics();
   const router = useRouter();
@@ -87,6 +88,12 @@ export default function SignInScreen() {
             </Text>
           ) : null}
           <Button title={t('signIn')} loading={submitting} onPress={onSubmit} />
+          <Text tone="muted">
+            {t('noAccount')}{' '}
+            <Link href={href('signUp')} style={{ color: colors.primary, fontWeight: '600' }}>
+              {t('signUp')}
+            </Link>
+          </Text>
         </Stack>
       </Card>
     </Screen>

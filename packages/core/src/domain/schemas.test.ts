@@ -2,6 +2,7 @@ import {
   appConfigSchema,
   greetingSchema,
   signInInputSchema,
+  signUpInputSchema,
   updateProfileInputSchema,
   userSchema,
 } from './schemas';
@@ -67,4 +68,22 @@ describe('appConfigSchema', () => {
     ).toBe(false));
   it('rejects a missing min version', () =>
     expect(appConfigSchema.safeParse({}).success).toBe(false));
+});
+
+describe('signUpInputSchema', () => {
+  const valid = { name: 'Grace Hopper', email: 'grace@example.com', password: 'cobol-1959' };
+  it('accepts a name, email and password', () =>
+    expect(signUpInputSchema.safeParse(valid).success).toBe(true));
+  it('trims the name and requires it', () => {
+    expect(signUpInputSchema.parse({ ...valid, name: '  Grace  ' }).name).toBe('Grace');
+    const r = signUpInputSchema.safeParse({ ...valid, name: '   ' });
+    expect(r.error?.issues.map((i) => i.message)).toEqual(['validation:nameRequired']);
+  });
+  it('applies the sign-in rules to email and password', () => {
+    const r = signUpInputSchema.safeParse({ ...valid, email: 'x', password: 'short' });
+    expect(r.error?.issues.map((i) => i.message)).toEqual([
+      'validation:emailInvalid',
+      'validation:passwordTooShort',
+    ]);
+  });
 });

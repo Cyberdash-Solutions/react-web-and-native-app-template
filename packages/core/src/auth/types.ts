@@ -1,4 +1,4 @@
-import type { AuthTokens, SignInInput, SignInResponse, User } from '../domain';
+import type { AuthTokens, SignInInput, SignInResponse, SignUpInput, User } from '../domain';
 
 /**
  * 4.1 / 4.2 — Injected storage interface. Mobile keeps the refresh token in Keychain/Keystore;
@@ -18,6 +18,7 @@ export interface TokenStorage {
 /** The subset of endpoints the session needs; satisfied by `createEndpoints(client)`. */
 export interface AuthApi {
   signIn(input: SignInInput): Promise<SignInResponse>;
+  signUp(input: SignUpInput): Promise<SignInResponse>;
   refresh(refreshToken?: string): Promise<AuthTokens>;
   signOut(): Promise<unknown>;
   getMe(): Promise<User>;

@@ -23,14 +23,33 @@ export interface MockResponse {
 
 const REFRESH_COOKIE = 'refresh_token';
 
+interface Account {
+  user: Fixtures['user'];
+  password: string;
+  accessToken: string;
+  /** The account's refresh token; `live` is false once it is revoked (sign-out). */
+  refreshToken: string;
+  live: boolean;
+  messages: Fixtures['messages'];
+}
+
 export function createMockBackend(fixtures: Fixtures) {
   let db = seed();
 
   function seed() {
     return {
-      user: structuredClone(fixtures.user) as Fixtures['user'] | null,
-      messages: structuredClone(fixtures.messages),
-      refreshToken: fixtures.tokens.refreshToken as string | null,
+      /** Fixtures seed one account (Ada); POST /auth/register adds more. */
+      accounts: [
+        {
+          user: structuredClone(fixtures.user),
+          password: fixtures.credentials.password,
+          accessToken: fixtures.tokens.accessToken,
+          refreshToken: fixtures.tokens.refreshToken,
+          live: true,
+          messages: structuredClone(fixtures.messages),
+        },
+      ] as Account[],
+      nextId: 1,
     };
   }
 
@@ -49,12 +68,30 @@ export function createMockBackend(fixtures: Fixtures) {
   const setRefreshCookie = (value: string | null) => ({
     'Set-Cookie': `${REFRESH_COOKIE}=${value ?? ''}; HttpOnly; Path=/auth; SameSite=Lax${value ? '' : '; Max-Age=0'}`,
   });
+  const byEmail = (email: unknown) =>
+    typeof email === 'string'
+      ? db.accounts.find((a) => a.user.email.toLowerCase() === email.trim().toLowerCase())
+      : undefined;
+  /** The signed-in account, from the bearer access token. */
   const authed = (req: MockRequest) =>
-    !!db.user && req.header('authorization') === `Bearer ${fixtures.tokens.accessToken}`;
-  const tokenBody = (web: boolean) =>
-    web
-      ? { accessToken: fixtures.tokens.accessToken, expiresIn: fixtures.tokens.expiresIn }
-      : { ...fixtures.tokens };
+    db.accounts.find((a) => req.header('authorization') === `Bearer ${a.accessToken}`);
+  const presentedRefresh = (req: MockRequest, body: Record<string, unknown>) =>
+    (body.refreshToken as string | undefined) ?? cookie(req, REFRESH_COOKIE);
+  const tokenBody = (account: Account, web: boolean) => ({
+    accessToken: account.accessToken,
+    expiresIn: fixtures.tokens.expiresIn,
+    ...(web ? {} : { refreshToken: account.refreshToken }),
+  });
+  /** A signed-in response: tokens + user; web gets the refresh token as an httpOnly cookie. */
+  const startSession = (status: number, account: Account, req: MockRequest) => {
+    account.live = true;
+    const web = isWeb(req);
+    return json(
+      status,
+      { ...tokenBody(account, web), user: account.user },
+      web ? setRefreshCookie(account.refreshToken) : undefined,
+    );
+  };
 
   function handle(req: MockRequest): MockResponse {
     const route = `${req.method.toUpperCase()} ${req.path.replace(/\/$/, '') || '/'}`;
@@ -69,68 +106,94 @@ export function createMockBackend(fixtures: Fixtures) {
       case 'GET /config':
         return json(200, fixtures.appConfig);
       case 'GET /greeting': {
-        const name = authed(req) && db.user ? db.user.name : 'world';
+        const name = authed(req)?.user.name ?? 'world';
         return json(200, { message: `Hello, ${name}!`, name, servedAt: new Date().toISOString() });
       }
+      case 'POST /auth/register': {
+        const name = typeof body.name === 'string' ? body.name.trim() : '';
+        const email = typeof body.email === 'string' ? body.email.trim() : '';
+        const password = typeof body.password === 'string' ? body.password : '';
+        if (!name) return json(422, { message: 'validation:nameRequired' });
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+          return json(422, { message: 'validation:emailInvalid' });
+        if (password.length < 8) return json(422, { message: 'validation:passwordTooShort' });
+        if (byEmail(email)) return json(409, { message: 'errors:emailTaken' });
+        const id = `u_${db.nextId++}`;
+        const account: Account = {
+          user: { id, name, email, createdAt: new Date().toISOString() },
+          password,
+          accessToken: `access-${id}`,
+          refreshToken: `refresh-${id}`,
+          live: true,
+          messages: [],
+        };
+        db.accounts.push(account);
+        return startSession(201, account, req);
+      }
       case 'POST /auth/login': {
-        if (
-          !db.user ||
-          body.email !== fixtures.credentials.email ||
-          body.password !== fixtures.credentials.password
-        ) {
+        const account = byEmail(body.email);
+        if (!account || body.password !== account.password)
           return json(401, { message: 'errors:invalidCredentials' });
-        }
-        db.refreshToken = fixtures.tokens.refreshToken;
-        const web = isWeb(req);
-        return json(
-          200,
-          { ...tokenBody(web), user: db.user },
-          web ? setRefreshCookie(db.refreshToken) : undefined,
-        );
+        return startSession(200, account, req);
       }
       case 'POST /auth/refresh': {
-        const presented = (body.refreshToken as string | undefined) ?? cookie(req, REFRESH_COOKIE);
-        if (!db.user || !presented || presented !== db.refreshToken)
-          return json(401, { message: 'Session expired' });
-        return json(200, tokenBody(isWeb(req)));
+        const presented = presentedRefresh(req, body);
+        const account = db.accounts.find((a) => a.live && a.refreshToken === presented);
+        if (!presented || !account) return json(401, { message: 'Session expired' });
+        return json(200, tokenBody(account, isWeb(req)));
       }
-      case 'POST /auth/logout':
-        db.refreshToken = null;
+      case 'POST /auth/logout': {
+        const presented = presentedRefresh(req, body);
+        const account =
+          db.accounts.find((a) => a.refreshToken === presented) ?? authed(req) ?? null;
+        if (account) account.live = false;
         return json(204, undefined, setRefreshCookie(null));
-      case 'GET /me':
-        return authed(req) ? json(200, db.user) : json(401, { message: 'Unauthorized' });
+      }
+      case 'GET /me': {
+        const account = authed(req);
+        return account ? json(200, account.user) : json(401, { message: 'Unauthorized' });
+      }
       case 'PATCH /me': {
-        if (!authed(req) || !db.user) return json(401, { message: 'Unauthorized' });
+        const account = authed(req);
+        if (!account) return json(401, { message: 'Unauthorized' });
         const name = typeof body.name === 'string' ? body.name.trim() : '';
         if (!name) return json(422, { message: 'validation:nameRequired' });
-        db.user = { ...db.user, name };
-        return json(200, db.user);
+        account.user = { ...account.user, name };
+        return json(200, account.user);
       }
-      case 'DELETE /me':
-        if (!authed(req)) return json(401, { message: 'Unauthorized' });
-        db.user = null;
-        db.refreshToken = null;
+      case 'DELETE /me': {
+        const account = authed(req);
+        if (!account) return json(401, { message: 'Unauthorized' });
+        db.accounts = db.accounts.filter((a) => a !== account);
         return json(204);
-      case 'GET /me/export':
-        if (!authed(req) || !db.user) return json(401, { message: 'Unauthorized' });
+      }
+      case 'GET /me/export': {
+        const account = authed(req);
+        if (!account) return json(401, { message: 'Unauthorized' });
         return json(200, {
-          user: db.user,
-          messages: db.messages,
+          user: account.user,
+          messages: account.messages,
           exportedAt: new Date().toISOString(),
         });
+      }
       case 'GET /messages': {
-        if (!authed(req)) return json(401, { message: 'Unauthorized' });
+        const account = authed(req);
+        if (!account) return json(401, { message: 'Unauthorized' });
         const limit = Math.min(Number(req.query.get('limit') ?? 10), 50);
         const start = Number(req.query.get('cursor') ?? 0);
-        const items = db.messages.slice(start, start + limit);
+        const items = account.messages.slice(start, start + limit);
         const end = start + items.length;
-        return json(200, { items, nextCursor: end < db.messages.length ? String(end) : null });
+        return json(200, {
+          items,
+          nextCursor: end < account.messages.length ? String(end) : null,
+        });
       }
     }
     const message = req.path.match(/^\/messages\/([^/]+)$/);
     if (req.method === 'GET' && message) {
-      if (!authed(req)) return json(401, { message: 'Unauthorized' });
-      const found = db.messages.find((m) => m.id === message[1]);
+      const account = authed(req);
+      if (!account) return json(401, { message: 'Unauthorized' });
+      const found = account.messages.find((m) => m.id === message[1]);
       return found ? json(200, found) : json(404, { message: 'Not found' });
     }
     return json(404, { message: `No mock for ${route}` });

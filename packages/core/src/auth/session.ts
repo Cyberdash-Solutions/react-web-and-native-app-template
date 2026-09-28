@@ -1,4 +1,10 @@
-import { type AppError, normalizeError, type SignInInput } from '../domain';
+import {
+  type AppError,
+  normalizeError,
+  type SignInInput,
+  type SignInResponse,
+  type SignUpInput,
+} from '../domain';
 
 import {
   authReducer,
@@ -47,6 +53,19 @@ export function createAuthSession({
   };
 
   const expiresAt = (expiresIn: number) => now() + expiresIn * 1000;
+
+  /** Sign-in and sign-up both end with a fresh session for the returned user. */
+  async function startSession(res: SignInResponse) {
+    await storage.setRefreshToken(res.refreshToken ?? null);
+    storage.sessionHint?.set(true);
+    dispatch({
+      type: 'SIGNED_IN',
+      user: res.user,
+      accessToken: res.accessToken,
+      expiresAt: expiresAt(res.expiresIn),
+    });
+    return res.user;
+  }
 
   async function doRefresh(): Promise<boolean> {
     const refreshToken = await storage.getRefreshToken();
@@ -118,18 +137,10 @@ export function createAuthSession({
         ? (inflightRefresh ??= doRefresh().finally(() => (inflightRefresh = null)))
         : Promise.resolve(state.status === 'signedIn'),
 
-    async signIn(input: SignInInput) {
-      const res = await api().signIn(input);
-      await storage.setRefreshToken(res.refreshToken ?? null);
-      storage.sessionHint?.set(true);
-      dispatch({
-        type: 'SIGNED_IN',
-        user: res.user,
-        accessToken: res.accessToken,
-        expiresAt: expiresAt(res.expiresIn),
-      });
-      return res.user;
-    },
+    signIn: async (input: SignInInput) => startSession(await api().signIn(input)),
+
+    /** Creates an account and signs straight into it. */
+    signUp: async (input: SignUpInput) => startSession(await api().signUp(input)),
 
     /** Deduplicated: concurrent callers share one refresh. Wired into the api-client's refreshAuth. */
     refresh(): Promise<boolean> {
